@@ -134,11 +134,19 @@ if page == "📊 Dashboard สรุปผล":
             depts_list = ["ทั้งหมด"] + department_data[selected_floor] if selected_floor != "ทั้งหมด" else ["ทั้งหมด"]
             selected_dept = st.selectbox("4. เลือกแผนก", depts_list)
             
-        # 🌟 โค้ดแสดงแถบแจ้งเตือน (Hint) จะทำงานได้ปกติแล้ว
+       # 🌟 โค้ดแสดงแถบแจ้งเตือน (Hint) แบบซ่อนได้เพื่อประหยัดพื้นที่
         if not df.empty:
             available_dates = df["วัน/เดือน/ปี"].dropna().unique().tolist()
-            st.info(f"📌 **วันที่มีประวัติการรายงาน:** {', '.join(available_dates)}")
             
+            # ถ้ามีประวัติการรายงานไม่เกิน 5 วัน ให้โชว์แถบสีฟ้าปกติ
+            if len(available_dates) <= 5:
+                st.info(f"📌 **วันที่มีประวัติการรายงาน:** {', '.join(available_dates)}")
+            
+            # แต่ถ้ามีเยอะกว่า 5 วัน ให้ซ่อนไว้ในกล่องกดขยาย (Expander) เพื่อไม่ให้รกหน้าจอ
+            else:
+                with st.expander(f"📌 มีประวัติการรายงานทั้งหมด {len(available_dates)} วัน (คลิกเพื่อดูรายชื่อวันที่)"):
+                    st.write(", ".join(available_dates))
+                    
     st.markdown("<br>", unsafe_allow_html=True)
     
     if not df.empty:
