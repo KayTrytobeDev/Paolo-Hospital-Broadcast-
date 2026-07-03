@@ -201,17 +201,24 @@ elif page == "📝 ฟอร์มรายงาน":
     st.title("📝 ฟอร์มรายงานผลการทดสอบระบบเสียง")
     st.markdown("---")
     
-    selected_floor_form = st.selectbox("1. คุณอยู่ชั้นไหน?", list(department_data.keys()))
-    
-    with st.form("report_form", clear_on_submit=True):
+    with st.container(border=True):
+        # 1. เลือกชั้น
+        selected_floor_form = st.selectbox("1. คุณอยู่ชั้นไหน?", list(department_data.keys()))
+        
+        # 2. เลือกแผนก
         selected_dept_form = st.selectbox("2. แผนกของคุณ", department_data.get(selected_floor_form, []))
         
+        # 3. เลือกระดับเสียง
         selected_volume = st.radio("3. ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด?", 
-            ["เสียงดังฟังชัด", "เบาเล็กน้อยแต่พอได้ยิน", "เบามากจับใจความไม่ได้", "ไม่ได้ยินเลย", "อื่นๆ"])
+            ["เสียงดังฟังชัดดี", "เสียงดังฟังชัด", "เบาเล็กน้อยแต่พอได้ยิน", "เบามากจับใจความไม่ได้", "ไม่ได้ยินเลย", "อื่นๆ"])
         
-        additional_info = st.text_area("4. ข้อมูลเพิ่มเติม (ถ้ามี)")
+        # 4. ข้อมูลเพิ่มเติม (ล็อคการพิมพ์ หากไม่ได้เลือก "อื่นๆ")
+        # เช็คเงื่อนไข: ถ้าไม่ได้เลือก "อื่นๆ" ตัวแปร is_disabled จะเป็น True (ล็อค)
+        is_disabled = True if selected_volume != "อื่นๆ" else False
+        additional_info = st.text_area("4. ข้อมูลเพิ่มเติม (เฉพาะกรณีเลือก 'อื่นๆ')", disabled=is_disabled)
         
-        submit_btn = st.form_submit_button("🚀 บันทึกและส่งรายงาน")
+        # 5. ปุ่มส่งข้อมูล (เปลี่ยนจาก st.form_submit_button เป็น st.button ปกติ)
+        submit_btn = st.button("🚀 บันทึกและส่งรายงาน")
 
         if submit_btn:
             tz = pytz.timezone('Asia/Bangkok')
