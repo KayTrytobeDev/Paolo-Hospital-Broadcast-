@@ -106,42 +106,62 @@ if page == "📊 Dashboard สรุปผล":
     st.title("📊 Dashboard ตรวจสอบระบบเสียงประกาศตามสาย")
     st.markdown("---")
     
-    # --- กล่องตัวกรองข้อมูล ---
+# --- กล่องตัวกรองข้อมูล ---
     with st.container(border=True):
         st.markdown("**🔍 ตัวกรองข้อมูล (Filters)**")
         c1, c2, c3, c4 = st.columns(4)
-        with c1: selected_month = st.selectbox("1. เลือกเดือน", months_th)
+        with c1: 
+            selected_month = st.selectbox("1. เลือกเดือน", months_th)
         with c2:
-            # สร้างตัวเลือกวันที่จากข้อมูลที่มีจริงในระบบ
-            if not df.empty and "วัน/เดือน/ปี" in df.columns:
-                existing_dates = df["วัน/เดือน/ปี"].dropna().unique().tolist()
-                date_options = ["ทั้งหมด"] + existing_dates
+            if selected_month != "ทั้งหมด":
+                current_year = datetime.now().year
+                month_index = months_th.index(selected_month)
+                last_day = calendar.monthrange(current_year, month_index)[1]
+                min_d = date(current_year, month_index, 1)
+                max_d = date(current_year, month_index, last_day)
+                selected_date = st.date_input("2. เลือกวันที่ (ปฏิทิน)", value=None, min_value=min_d, max_value=max_d)
             else:
-                date_options = ["ทั้งหมด"]
+                selected_date = st.date_input("2. เลือกวันที่ (ปฏิทิน)", value=None)
                 
-            selected_date = st.selectbox("2. เลือกวันที่ (ที่มีข้อมูล)", date_options)
-                
-        with c3: selected_floor = st.selectbox("3. เลือกชั้น", ["ทั้งหมด"] + list(department_data.keys()))
+        with c3: 
+            selected_floor = st.selectbox("3. เลือกชั้น", ["ทั้งหมด"] + list(department_data.keys()))
         with c4:
             depts_list = ["ทั้งหมด"] + department_data[selected_floor] if selected_floor != "ทั้งหมด" else ["ทั้งหมด"]
             selected_dept = st.selectbox("4. เลือกแผนก", depts_list)
             
+        # 🌟 เพิ่มแถบแจ้งเตือน (Hint) วันที่มีข้อมูลในระบบ
+        if not df.empty and "วัน/เดือน/ปี" in df.columns:
+            # ดึงเฉพาะวันที่ที่ไม่ซ้ำกันมาแสดง
+            available_dates = df["วัน/เดือน/ปี"].dropna().unique().tolist()
+            st.info(f"📌 **วันที่มีประวัติการรายงาน:** {', '.join(available_dates)}")
+            
     st.markdown("<br>", unsafe_allow_html=True)
     
     if not df.empty:
-        # บังคับโครงสร้างชื่อคอลัมน์ให้แมปเข้ากับ JSON เพื่อป้องกัน Error
         df.columns = ["วัน/เดือน/ปี", "เวลา", "คุณอยู่ชั้นไหน", "แผนก", "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด", "ข้อมูลเพิ่มเติม"]
         
-        # กรองข้อมูลตามฟิลเตอร์
+        # --- ระบบกรองข้อมูลตามฟิลเตอร์ ---
         filtered_df = df.copy()
-        if selected_date != "ทั้งหมด" and "วัน/เดือน/ปี" in filtered_df.columns:
-            filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"] == selected_date]
-            
+        
+        # 1. กรองวันที่จากปฏิทิน
+        if selected_date is not None:
+            # แปลงวันที่จากปฏิทินให้เป็นรูปแบบเดียวกับใน Sheet (เช่น 04 Jul 2026)
+            date_str = selected_date.strftime("%d %b %Y")
+            # ถ้าใน Sheet บันทึกแบบไม่มีเลข 0 นำหน้า (เช่น 4 Jul 2026) ให้ปรับแก้ด้วยการเช็คเพิ่มเติม
+            if date_str.startswith("0"): 
+                date_str_no_zero = date_str[1:]
+                filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"].isin([date_str, date_str_no_zero])]
+            else:
+                filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"] == date_str]
+                
+        # 2. กรองชั้น
         if selected_floor != "ทั้งหมด":
             filtered_df = filtered_df[filtered_df["คุณอยู่ชั้นไหน"] == selected_floor]
+            
+        # 3. กรองแผนก
         if selected_dept != "ทั้งหมด":
             filtered_df = filtered_df[filtered_df["แผนก"] == selected_dept]
-        
+            
         col_volume = "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด"
         
         total_reports = len(filtered_df)
