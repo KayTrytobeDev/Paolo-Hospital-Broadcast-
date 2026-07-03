@@ -13,40 +13,41 @@ st.set_page_config(page_title="Dashboard ระบบเสียง", layout="w
 
 st.markdown("""
     <style>
+    /* 🌟 นำเข้าฟอนต์ Oswald (Bold) สำหรับตัวเลข/อังกฤษ และ Prompt สำหรับภาษาไทย จาก Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Prompt:wght@400;600;700&display=swap');
+
     /* 1. ซ่อนเมนูขยะของ Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* 2. โครงสร้างฟอนต์หลัก */
+    /* 2. โครงสร้างฟอนต์หลัก บังคับใช้ Oswald และตั้งค่าเป็น Bold */
     html, body, [class*="css"] {
-        font-family: 'Sarabun', 'Prompt', sans-serif;
+        font-family: 'Oswald', 'Prompt', sans-serif !important;
+        /* ถ้าอยากให้ตัวหนังสือ "ทุกส่วน" หนาหมด ให้เอาคอมเมนต์บรรทัดล่างออกครับ */
+        /* font-weight: 700 !important; */ 
     }
 
     /* =========================================
-       🌟 3. ปรับแต่ง Sidebar (เมนูด้านข้าง) ให้ใหญ่และสะอาดตา
+       3. ปรับแต่ง Sidebar (เมนูด้านข้าง) 
        ========================================= */
-    /* หัวข้อ "เมนูหลัก" */
     [data-testid="stSidebar"] h1 {
         font-size: 32px !important;
-        font-weight: 800 !important;
+        font-weight: 700 !important;
         margin-bottom: -10px !important;
     }
     
-    /* ข้อความอธิบาย เช่น "เลือกหน้าต่างการทำงาน:" */
     [data-testid="stSidebar"] .stMarkdown p {
         font-size: 18px !important;
-        color: #888888 !important; /* ปรับสีให้อ่อนลงเพื่อให้ตัวเลือกดูเด่นขึ้น */
+        color: #888888 !important; 
         margin-bottom: 10px !important;
     }
     
-    /* ตัวหนังสือตัวเลือก (Dashboard สรุปผล / ฟอร์มรายงาน) */
     [data-testid="stSidebar"] .stRadio p {
         font-size: 22px !important; 
-        font-weight: 600 !important;
-        padding: 8px 0px !important; /* เพิ่มระยะห่างบน-ล่าง ให้กดง่ายขึ้น */
+        font-weight: 700 !important; /* บังคับตัวหนาสำหรับเมนู */
+        padding: 8px 0px !important; 
     }
     
-    /* ขยายขนาดวงกลม (Radio) ให้ใหญ่ขึ้นนิดนึงสมดุลกับฟอนต์ */
     [data-testid="stSidebar"] .stRadio div[role="radio"] {
         transform: scale(1.2);
         margin-right: 10px;
@@ -55,20 +56,25 @@ st.markdown("""
     /* =========================================
        4. ปรับแต่งปุ่มและช่องกรอกข้อมูล
        ========================================= */
-    /* ป้องกัน iOS ซูมหน้าจออัตโนมัติ */
     input, textarea, select {
         font-size: 16px !important;
     }
     
-   /* ขยายขนาดปุ่มกดให้เต็มนิ้ว สัมผัสง่ายและดู Modern */
     .stButton>button {
         width: 100%;
         height: 55px;
-        font-size: 18px !important;
-        font-weight: bold !important;
+        font-size: 20px !important;
+        font-family: 'Oswald', 'Prompt', sans-serif !important;
+        font-weight: 700 !important;
         border-radius: 12px !important; 
         margin-top: 15px !important;
-        justify-content: center !important; /* เพิ่มบรรทัดนี้เพื่อบังคับให้อยู่กึ่งกลางเป๊ะๆ */
+        justify-content: center !important; 
+    }
+    
+    /* 🌟 เพิ่มความโดดเด่นให้ตัวเลข KPI ด้วย Oswald */
+    [data-testid="stMetricValue"] {
+        font-family: 'Oswald', sans-serif !important;
+        font-weight: 700 !important;
     }
     </style>
 """, unsafe_allow_html=True)
