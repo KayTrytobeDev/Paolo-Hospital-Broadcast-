@@ -281,9 +281,84 @@ if page == "📊 Dashboard สรุปผล":
 </table>"""
                 st.markdown(html_table, unsafe_allow_html=True)
             
+        # ==========================================
+        # 🌟 ส่วนเพิ่มกราฟแนวโน้ม (Trend Line Chart) 
+        # ==========================================
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("**📈 แนวโน้มผลการทดสอบความพร้อมของระบบ (รายวัน)**")
+            
+            # ดึงข้อมูลมาสร้างกราฟ โดยกรองแค่ ชั้น/แผนก (ไม่กรองวันที่ เพื่อให้เห็นเทรนด์ทั้งหมด)
+            trend_df = df.copy()
+            if selected_floor != "ทั้งหมด":
+                trend_df = trend_df[trend_df["คุณอยู่ชั้นไหน"] == selected_floor]
+            if selected_dept != "ทั้งหมด":
+                trend_df = trend_df[trend_df["แผนก"] == selected_dept]
+                
+            if not trend_df.empty and "วัน/เดือน/ปี" in trend_df.columns:
+                # แปลงรูปแบบวันที่เพื่อเรียงลำดับก่อนหลังให้ถูกต้อง
+                trend_df['DateObj'] = pd.to_datetime(trend_df['วัน/เดือน/ปี'], format='%d %b %Y', errors='coerce')
+                trend_df = trend_df.dropna(subset=['DateObj']).sort_values('DateObj')
+                
+                # จัดกลุ่มและคำนวณยอด ผ่าน/ไม่ผ่าน รายวัน
+                daily_trend = trend_df.groupby('วัน/เดือน/ปี', sort=False).apply(
+                    lambda x: pd.Series({
+                        'Total': len(x),
+                        'Pass': len(x[x[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)])
+                    })
+                ).reset_index()
+                
+                # คำนวณเปอร์เซ็นต์
+                daily_trend['Readiness (%)'] = (daily_trend['Pass'] / daily_trend['Total']) * 100
+                
+                # ฟังก์ชันแปลงชื่อเดือนภาษาอังกฤษ (Jul) เป็นตัวย่อภาษาไทย (ก.ค.) ให้เหมือนในรูป
+                thai_months = {"Jan":"ม.ค.", "Feb":"ก.พ.", "Mar":"มี.ค.", "Apr":"เม.ย.", "May":"พ.ค.", "Jun":"มิ.ย.", "Jul":"ก.ค.", "Aug":"ส.ค.", "Sep":"ก.ย.", "Oct":"ต.ค.", "Nov":"พ.ย.", "Dec":"ธ.ค."}
+                def to_thai_date(date_str):
+                    try:
+                        d, m, y = date_str.split()
+                        return f"{int(d)} {thai_months.get(m, m)}"
+                    except:
+                        return date_str
+                
+                daily_trend['ThaiDate'] = daily_trend['วัน/เดือน/ปี'].apply(to_thai_date)
+                
+                # เตรียมตัวเลขสำหรับโชว์เหนือจุดกราฟ (Text)
+                daily_trend['Text'] = daily_trend['Readiness (%)'].apply(lambda x: f"{x:.1f}%")
+                
+                # สร้างกราฟด้วย Plotly
+                fig_line = px.line(
+                    daily_trend, 
+                    x='ThaiDate', 
+                    y='Readiness (%)', 
+                    text='Text',
+                    markers=True
+                )
+                
+                # ปรับแต่งสีและสไตล์ให้เหมือนรูปเป๊ะๆ
+                fig_line.update_traces(
+                    textposition="top center",     # ให้ตัวเลขอยู่บนจุด
+                    textfont_size=14,
+                    marker=dict(size=10, color="#28a745"), # จุดสีเขียว
+                    line=dict(color="#28a745", width=3)    # เส้นสีเขียว
+                )
+                fig_line.update_layout(
+                    yaxis_range=[0, 115], # เผื่อพื้นที่ด้านบนไว้ให้ตัวเลขไม่โดนตัด
+                    xaxis_title="",
+                    yaxis_title="ความพร้อมของระบบ (%)",
+                    margin=dict(t=20, b=20, l=10, r=10),
+                    height=320,
+                    # ทำให้พื้นหลังกราฟโปร่งใส และใส่เส้น Grid แนวนอนบางๆ
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    yaxis=dict(gridcolor="#e0e0e0", zerolinecolor="#e0e0e0"),
+                    xaxis=dict(gridcolor="rgba(0,0,0,0)") 
+                )
+                
+                st.plotly_chart(fig_line, use_container_width=True)
+            else:
+                st.info("ไม่มีข้อมูลเพียงพอสำหรับสร้างกราฟแนวโน้ม")
+            
     else:
         st.warning("⚠️ ยังไม่มีข้อมูลในระบบ หรือเกิดข้อผิดพลาดในการเชื่อมต่อกรุณาตรวจสอบการเปิดใช้งาน doGet บน Apps Script")
-
 # ==========================================
 # 6. หน้าต่างการทำงาน: ฟอร์มกรอกรายงาน
 # ==========================================
