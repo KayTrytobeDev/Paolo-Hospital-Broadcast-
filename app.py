@@ -106,10 +106,15 @@ if page == "📊 Dashboard สรุปผล":
     st.title("📊 Dashboard ตรวจสอบระบบเสียงประกาศตามสาย")
     st.markdown("---")
     
-# --- กล่องตัวกรองข้อมูล ---
+    # 🌟 ย้ายการเซ็ตชื่อคอลัมน์มาไว้บนสุดตรงนี้ เพื่อให้ระบบรู้จักชื่อคอลัมน์ตั้งแต่แรก!
+    if not df.empty:
+        df.columns = ["วัน/เดือน/ปี", "เวลา", "คุณอยู่ชั้นไหน", "แผนก", "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด", "ข้อมูลเพิ่มเติม"]
+    
+    # --- กล่องตัวกรองข้อมูล ---
     with st.container(border=True):
         st.markdown("**🔍 ตัวกรองข้อมูล (Filters)**")
         c1, c2, c3, c4 = st.columns(4)
+        
         with c1: 
             selected_month = st.selectbox("1. เลือกเดือน", months_th)
         with c2:
@@ -129,25 +134,20 @@ if page == "📊 Dashboard สรุปผล":
             depts_list = ["ทั้งหมด"] + department_data[selected_floor] if selected_floor != "ทั้งหมด" else ["ทั้งหมด"]
             selected_dept = st.selectbox("4. เลือกแผนก", depts_list)
             
-        # 🌟 เพิ่มแถบแจ้งเตือน (Hint) วันที่มีข้อมูลในระบบ
-        if not df.empty and "วัน/เดือน/ปี" in df.columns:
-            # ดึงเฉพาะวันที่ที่ไม่ซ้ำกันมาแสดง
+        # 🌟 โค้ดแสดงแถบแจ้งเตือน (Hint) จะทำงานได้ปกติแล้ว
+        if not df.empty:
             available_dates = df["วัน/เดือน/ปี"].dropna().unique().tolist()
             st.info(f"📌 **วันที่มีประวัติการรายงาน:** {', '.join(available_dates)}")
             
     st.markdown("<br>", unsafe_allow_html=True)
     
     if not df.empty:
-        df.columns = ["วัน/เดือน/ปี", "เวลา", "คุณอยู่ชั้นไหน", "แผนก", "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด", "ข้อมูลเพิ่มเติม"]
-        
         # --- ระบบกรองข้อมูลตามฟิลเตอร์ ---
         filtered_df = df.copy()
         
         # 1. กรองวันที่จากปฏิทิน
         if selected_date is not None:
-            # แปลงวันที่จากปฏิทินให้เป็นรูปแบบเดียวกับใน Sheet (เช่น 04 Jul 2026)
             date_str = selected_date.strftime("%d %b %Y")
-            # ถ้าใน Sheet บันทึกแบบไม่มีเลข 0 นำหน้า (เช่น 4 Jul 2026) ให้ปรับแก้ด้วยการเช็คเพิ่มเติม
             if date_str.startswith("0"): 
                 date_str_no_zero = date_str[1:]
                 filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"].isin([date_str, date_str_no_zero])]
@@ -163,6 +163,8 @@ if page == "📊 Dashboard สรุปผล":
             filtered_df = filtered_df[filtered_df["แผนก"] == selected_dept]
             
         col_volume = "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด"
+        
+        # ... (ส่วนโค้ดด้านล่างที่เป็นการสร้าง KPI กราฟโดนัท และตาราง ปล่อยไว้เหมือนเดิมครับ) ...
         
         total_reports = len(filtered_df)
         
