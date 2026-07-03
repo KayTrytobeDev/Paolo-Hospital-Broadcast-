@@ -16,7 +16,7 @@ st.set_page_config(page_title="Dashboard ระบบเสียง", layout="w
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwhENUa0dRVKuwJyX8IgoJwszlpsvxWssWXBsATe-cKUjNlsFuFgAtoRIvM39iXKEx/exec" 
 
 # ⚠️ 2. ใส่ ลิงก์ CSV ที่ได้จากการ Publish Google Sheets เป็น CSV
-PUBLIC_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc1aDjn_PYGYPV2JZBJvns8mAoVKGAkL2Yb1nWOKQAcgYHukN7X_eKJf8KEYbEbSyJ-YmGlOpreZXv/pubhtml?gid=0&single=true"
+PUBLIC_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc1aDjn_PYGYPV2JZBJvns8mAoVKGAkL2Yb1nWOKQAcgYHukN7X_eKJf8KEYbEbSyJ-YmGlOpreZXv/pub?gid=0&single=true&output=csv"
 
 # ==========================================
 # 2. ข้อมูลตั้งต้น
