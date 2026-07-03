@@ -216,7 +216,7 @@ if page == "📊 Dashboard สรุปผล":
                 st.markdown("**สถานะอุปกรณ์ (สัดส่วนภาพรวม)**")
                 if total_reports > 0:
                     chart_data = pd.DataFrame({"สถานะ": ["ผ่าน", "ไม่ผ่าน"], "จำนวน": [pass_reports, fail_reports]})
-                    fig = px.pie(chart_data, values='จำนวน', names='สถานะ', hole=0.6, color='get_status',
+                    fig = px.pie(chart_data, values='จำนวน', names='สถานะ', hole=0.6, color='สถานะ',
                                  color_discrete_map={"ผ่าน": "#28a745", "ไม่ผ่าน": "#dc3545"})
                     fig.update_traces(textinfo='percent+label', textfont_size=14)
                     fig.update_layout(showlegend=False, margin=dict(t=20, b=20, l=10, r=10), height=320)
