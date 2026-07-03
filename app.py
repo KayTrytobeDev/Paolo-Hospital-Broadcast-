@@ -13,19 +13,17 @@ st.set_page_config(page_title="Dashboard ระบบเสียง", layout="w
 
 st.markdown("""
     <style>
-    /* 🌟 นำเข้าฟอนต์ Oswald (Bold) สำหรับตัวเลข/อังกฤษ และ Prompt สำหรับภาษาไทย จาก Google Fonts */
+    /* 🌟 นำเข้าฟอนต์ Oswald (Bold) และ Prompt จาก Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Prompt:wght@400;600;700&display=swap');
+
+    /* 🚨 ไม้ตาย: บังคับทุกๆ ชิ้นส่วนบนหน้าเว็บให้ใช้ฟอนต์นี้แบบ 100% */
+    * {
+        font-family: 'Oswald', 'Prompt', sans-serif !important;
+    }
 
     /* 1. ซ่อนเมนูขยะของ Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    
-    /* 2. โครงสร้างฟอนต์หลัก บังคับใช้ Oswald และตั้งค่าเป็น Bold */
-    html, body, [class*="css"] {
-        font-family: 'Oswald', 'Prompt', sans-serif !important;
-        /* ถ้าอยากให้ตัวหนังสือ "ทุกส่วน" หนาหมด ให้เอาคอมเมนต์บรรทัดล่างออกครับ */
-        /* font-weight: 700 !important; */ 
-    }
 
     /* =========================================
        3. ปรับแต่ง Sidebar (เมนูด้านข้าง) 
@@ -44,7 +42,7 @@ st.markdown("""
     
     [data-testid="stSidebar"] .stRadio p {
         font-size: 22px !important; 
-        font-weight: 700 !important; /* บังคับตัวหนาสำหรับเมนู */
+        font-weight: 700 !important;
         padding: 8px 0px !important; 
     }
     
@@ -64,16 +62,17 @@ st.markdown("""
         width: 100%;
         height: 55px;
         font-size: 20px !important;
-        font-family: 'Oswald', 'Prompt', sans-serif !important;
         font-weight: 700 !important;
         border-radius: 12px !important; 
         margin-top: 15px !important;
-        justify-content: center !important; 
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
     }
     
-    /* 🌟 เพิ่มความโดดเด่นให้ตัวเลข KPI ด้วย Oswald */
+    /* 🌟 เพิ่มขนาดตัวเลข KPI ให้กระแทกตา */
     [data-testid="stMetricValue"] {
-        font-family: 'Oswald', sans-serif !important;
+        font-size: 45px !important;
         font-weight: 700 !important;
     }
     </style>
