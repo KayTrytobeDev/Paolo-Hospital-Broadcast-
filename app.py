@@ -13,27 +13,61 @@ st.set_page_config(page_title="Dashboard ระบบเสียง", layout="w
 
 st.markdown("""
     <style>
-    /* ซ่อนเมนูตั้งค่าและลายน้ำของ Streamlit แต่ "ห้ามซ่อน header" เพื่อให้ปุ่มเมนูบนมือถือยังทำงานได้ */
+    /* 1. ซ่อนเมนูขยะของ Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* ป้องกัน iOS ซูมหน้าจออัตโนมัติเวลากดพิมพ์ */
+    /* 2. โครงสร้างฟอนต์หลัก */
+    html, body, [class*="css"] {
+        font-family: 'Sarabun', 'Prompt', sans-serif;
+    }
+
+    /* =========================================
+       🌟 3. ปรับแต่ง Sidebar (เมนูด้านข้าง) ให้ใหญ่และสะอาดตา
+       ========================================= */
+    /* หัวข้อ "เมนูหลัก" */
+    [data-testid="stSidebar"] h1 {
+        font-size: 32px !important;
+        font-weight: 800 !important;
+        margin-bottom: -10px !important;
+    }
+    
+    /* ข้อความอธิบาย เช่น "เลือกหน้าต่างการทำงาน:" */
+    [data-testid="stSidebar"] .stMarkdown p {
+        font-size: 18px !important;
+        color: #888888 !important; /* ปรับสีให้อ่อนลงเพื่อให้ตัวเลือกดูเด่นขึ้น */
+        margin-bottom: 10px !important;
+    }
+    
+    /* ตัวหนังสือตัวเลือก (Dashboard สรุปผล / ฟอร์มรายงาน) */
+    [data-testid="stSidebar"] .stRadio p {
+        font-size: 22px !important; 
+        font-weight: 600 !important;
+        padding: 8px 0px !important; /* เพิ่มระยะห่างบน-ล่าง ให้กดง่ายขึ้น */
+    }
+    
+    /* ขยายขนาดวงกลม (Radio) ให้ใหญ่ขึ้นนิดนึงสมดุลกับฟอนต์ */
+    [data-testid="stSidebar"] .stRadio div[role="radio"] {
+        transform: scale(1.2);
+        margin-right: 10px;
+    }
+
+    /* =========================================
+       4. ปรับแต่งปุ่มและช่องกรอกข้อมูล
+       ========================================= */
+    /* ป้องกัน iOS ซูมหน้าจออัตโนมัติ */
     input, textarea, select {
         font-size: 16px !important;
     }
     
-    /* ขยายขนาดปุ่มกดให้เต็มนิ้ว สัมผัสง่ายบนมือถือ/ไอแพด */
+    /* ขยายขนาดปุ่มกดให้เต็มนิ้ว สัมผัสง่ายและดู Modern */
     .stButton>button {
         width: 100%;
-        height: 50px;
-        font-size: 18px;
-        font-weight: bold;
-        border-radius: 8px;
-    }
-    
-    /* โครงสร้างฟอนต์อ่านง่ายสไตล์ไทย */
-    html, body, [class*="css"] {
-        font-family: 'Sarabun', 'Prompt', sans-serif;
+        height: 55px;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        border-radius: 12px !important; /* ทำให้ขอบมนขึ้น ดูสะอาดตา */
+        margin-top: 15px !important;
     }
     </style>
 """, unsafe_allow_html=True)
