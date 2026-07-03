@@ -6,9 +6,45 @@ import requests
 import pytz
 import plotly.express as px
 
-# ตั้งค่าหน้าเพจ
+# ตั้งค่าหน้าเพจ (โค้ดเดิมของคุณ)
 st.set_page_config(page_title="Dashboard ระบบเสียง", layout="wide", page_icon="🔊")
 
+# ==========================================
+# 🌟 ส่วนเสริม: โค้ด CSS ปรับแต่งให้รองรับ Mobile/Tablet แบบ App-like
+# ==========================================
+st.markdown("""
+    <style>
+    /* 1. ซ่อนเมนูตั้งค่าและลายน้ำของ Streamlit เพื่อให้ดูเหมือนแอปจริงๆ */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* 2. ป้องกัน iOS ซูมหน้าจออัตโนมัติเวลากดพิมพ์ (บังคับ Font size 16px) */
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+    
+    /* 3. ขยายขนาดปุ่มกดให้เต็มนิ้ว สัมผัสง่ายบนหน้าจอมือถือ */
+    .stButton>button {
+        width: 100%;
+        height: 50px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+    }
+    
+    /* 4. ปรับตารางรายงานให้เลื่อนซ้าย-ขวาได้ (Scrollable) บนหน้าจอเล็ก */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 5. ปรับขนาดกล่องและฟอนต์ให้ยืดหยุ่น */
+    html, body, [class*="css"] {
+        font-family: 'Sarabun', 'Prompt', sans-serif;
+    }
+    </style>
+""", unsafe_allow_html=True)
 # ==========================================
 # 1. การตั้งค่า URL ของ Google Apps Script
 # ==========================================
