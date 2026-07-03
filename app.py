@@ -16,9 +16,14 @@ st.markdown("""
     /* 🌟 นำเข้าฟอนต์ Oswald (Bold) และ Prompt จาก Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Prompt:wght@400;600;700&display=swap');
 
-    /* 🚨 ไม้ตาย: บังคับทุกๆ ชิ้นส่วนบนหน้าเว็บให้ใช้ฟอนต์นี้แบบ 100% */
-    * {
+    /* 🚨 ระบุฟอนต์เจาะจงเฉพาะข้อความ (หลีกเลี่ยงการใช้ * เพื่อไม่ให้กระทบไอคอน) */
+    html, body, p, div, h1, h2, h3, h4, h5, h6, a, button, input, select, textarea {
         font-family: 'Oswald', 'Prompt', sans-serif !important;
+    }
+
+    /* 🌟 คืนค่าฟอนต์ให้ Icon ของ Streamlit กลับมาเป็นรูปภาพเหมือนเดิม */
+    .material-symbols-rounded, .material-icons, [class^="st-emotion-"] {
+        font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
     }
 
     /* 1. ซ่อนเมนูขยะของ Streamlit */
