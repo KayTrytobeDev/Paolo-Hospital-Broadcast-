@@ -6,25 +6,24 @@ import requests
 import pytz
 import plotly.express as px
 
-# ตั้งค่าหน้าเพจ (โค้ดเดิมของคุณ)
+# ==========================================
+# 📱 ตั้งค่าหน้าเพจ & โครงสร้าง CSS รองรับทุกอุปกรณ์ (Mobile/PC)
+# ==========================================
 st.set_page_config(page_title="Dashboard ระบบเสียง", layout="wide", page_icon="🔊")
 
-# ==========================================
-# 🌟 ส่วนเสริม: โค้ด CSS ปรับแต่งให้รองรับ Mobile/Tablet แบบ App-like
-# ==========================================
 st.markdown("""
     <style>
-    /* 1. ซ่อนเมนูตั้งค่าและลายน้ำของ Streamlit เพื่อให้ดูเหมือนแอปจริงๆ */
+    /* ซ่อนเมนูขยะของ Streamlit เพื่อให้ดูเหมือนแอปพลิเคชันจริง */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* 2. ป้องกัน iOS ซูมหน้าจออัตโนมัติเวลากดพิมพ์ (บังคับ Font size 16px) */
+    /* ป้องกัน iOS ซูมหน้าจออัตโนมัติเวลากดพิมพ์ */
     input, textarea, select {
         font-size: 16px !important;
     }
     
-    /* 3. ขยายขนาดปุ่มกดให้เต็มนิ้ว สัมผัสง่ายบนหน้าจอมือถือ */
+    /* ขยายขนาดปุ่มกดให้เต็มนิ้ว สัมผัสง่ายบนมือถือ/ไอแพด */
     .stButton>button {
         width: 100%;
         height: 50px;
@@ -33,26 +32,21 @@ st.markdown("""
         border-radius: 8px;
     }
     
-    /* 4. ปรับตารางรายงานให้เลื่อนซ้าย-ขวาได้ (Scrollable) บนหน้าจอเล็ก */
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    /* 5. ปรับขนาดกล่องและฟอนต์ให้ยืดหยุ่น */
+    /* โครงสร้างฟอนต์อ่านง่ายสไตล์ไทย */
     html, body, [class*="css"] {
         font-family: 'Sarabun', 'Prompt', sans-serif;
     }
     </style>
 """, unsafe_allow_html=True)
+
 # ==========================================
 # 1. การตั้งค่า URL ของ Google Apps Script
 # ==========================================
-# ⚠️ ใส่ Web App URL ที่ได้จากขั้นตอนการ Deploy ใน Google Apps Script (ใช้ทั้งรับและส่งข้อมูล)
+# ⚠️ ใส่ Web App URL ที่ได้จากขั้นตอนการ Deploy ใน Google Apps Script ของคุณ
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwhENUa0dRVKuwJyX8IgoJwszlpsvxWssWXBsATe-cKUjNlsFuFgAtoRIvM39iXKEx/exec" 
 
 # ==========================================
-# 2. ข้อมูลแผนกตั้งต้น (อิงจากโครงสร้างโรงพยาบาล)
+# 2. ข้อมูลแผนกตั้งต้น & พจนานุกรมแปลภาษาไทย
 # ==========================================
 department_data = {
     "ชั้น G": ["แผนกรับส่งผู้ป่วยและรักษาความปลอดภัย", "แผนกต้อนรับลงทะเบียน", "แผนกประเมินสิทธิ์และพรบ.", "แผนกคลอเซ็นเตอร์", "แผนกห้องฉุกเฉิน", "แผนกศัลยกรรม", "แผนกกระดูกและข้อ", "แผนก X-Ray (MRI)", "แผนกการเงินนอก", "แผนกห้องยา", "แผนกตรวจสุขภาพ", "แผนก X-Ray (ทั่วไป)", "แผนกห้อง Lab"],
@@ -67,16 +61,33 @@ department_data = {
 }
 months_th = ["ทั้งหมด", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"]
 
+eng_to_thai_month = {
+    "Jan": "ม.ค.", "Feb": "ก.พ.", "Mar": "มี.ค.", "Apr": "เม.ย.",
+    "May": "พ.ค.", "Jun": "มิ.ย.", "Jul": "ก.ค.", "Aug": "ส.ค.",
+    "Sep": "ก.ย.", "Oct": "ต.ค.", "Nov": "พ.ย.", "Dec": "ธ.ค."
+}
+
+# 🌟 ฟังก์ชันอัจฉริยะแปลงวันที่จากฐานข้อมูล (English) ให้กลายเป็นภาษาไทย (พ.ศ.)
+def convert_to_thai_date(date_str):
+    try:
+        parts = str(date_str).split()
+        if len(parts) == 3:
+            day, month, year = parts
+            thai_m = eng_to_thai_month.get(month, month)
+            thai_y = int(year) + 543 # แปลง ค.ศ. เป็น พ.ศ.
+            return f"{int(day)} {thai_m} {thai_y}"
+    except:
+        pass
+    return date_str
+
 # ==========================================
 # 3. ฟังก์ชันดึงข้อมูลแบบ Real-time (ผ่าน Apps Script)
 # ==========================================
-@st.cache_data(ttl=0) # ตั้งแคชเป็น 0 เพื่อบังคับให้ดึงใหม่ทันทีเมื่อมีการอัปเดตหรือกดรีเฟรช
+@st.cache_data(ttl=0) 
 def load_data():
     try:
         response = requests.get(WEB_APP_URL)
         data = response.json()
-        
-        # ถ้าระบบส่งข้อมูลตารางกลับมา (ต้องมีมากกว่า 1 แถว รวมหัวตาราง)
         if len(data) > 1:
             df = pd.DataFrame(data[1:], columns=data[0])
             return df
@@ -94,7 +105,6 @@ st.sidebar.title("เมนูหลัก")
 page = st.sidebar.radio("เลือกหน้าต่างการทำงาน:", ["📊 Dashboard สรุปผล", "📝 ฟอร์มรายงาน"])
 st.sidebar.markdown("---")
 
-# ปุ่มกดสำหรับดึงข้อมูลล่าสุดทันทีแบบ Real-time
 if st.sidebar.button("🔄 ดึงข้อมูลล่าสุดเดี๋ยวนี้"):
     st.cache_data.clear()
     st.rerun()
@@ -106,17 +116,15 @@ if page == "📊 Dashboard สรุปผล":
     st.title("📊 Dashboard ตรวจสอบระบบเสียงประกาศตามสาย")
     st.markdown("---")
     
-    # 🌟 ย้ายการเซ็ตชื่อคอลัมน์มาไว้บนสุดตรงนี้ เพื่อให้ระบบรู้จักชื่อคอลัมน์ตั้งแต่แรก!
     if not df.empty:
         df.columns = ["วัน/เดือน/ปี", "เวลา", "คุณอยู่ชั้นไหน", "แผนก", "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด", "ข้อมูลเพิ่มเติม"]
     
-# --- กล่องตัวกรองข้อมูล ---
+    # --- กล่องตัวกรองข้อมูล ---
     with st.container(border=True):
         st.markdown("**🔍 ตัวกรองข้อมูล (Filters)**")
         c1, c2, c3, c4 = st.columns(4)
         
-        with c1: 
-            selected_month = st.selectbox("1. เลือกเดือน", months_th)
+        with c1: selected_month = st.selectbox("1. เลือกเดือน", months_th)
         with c2:
             if selected_month != "ทั้งหมด":
                 current_year = datetime.now().year
@@ -128,48 +136,41 @@ if page == "📊 Dashboard สรุปผล":
             else:
                 selected_date = st.date_input("2. เลือกวันที่ (ปฏิทิน)", value=None)
                 
-        with c3: 
-            selected_floor = st.selectbox("3. เลือกชั้น", ["ทั้งหมด"] + list(department_data.keys()))
+        with c3: selected_floor = st.selectbox("3. เลือกชั้น", ["ทั้งหมด"] + list(department_data.keys()))
         with c4:
             depts_list = ["ทั้งหมด"] + department_data[selected_floor] if selected_floor != "ทั้งหมด" else ["ทั้งหมด"]
             selected_dept = st.selectbox("4. เลือกแผนก", depts_list)
             
-        # 🌟 สร้างแถบแจ้งเตือน (Hint) ที่อัปเดตตามฟิลเตอร์ เดือน/ชั้น/แผนก
-        if not df.empty and "วัน/เดือน/ปี" in df.columns:
+        # 🌟 แถบแจ้งเตือนบอกใบ้วันที่ (Hint) แบบผันตามตัวกรอง และแสดงผลเป็นภาษาไทย พ.ศ.
+        if not df.empty:
             hint_df = df.copy()
-            
-            # กรองเอาเฉพาะเดือนที่เลือก
             if selected_month != "ทั้งหมด":
                 month_idx = months_th.index(selected_month)
                 hint_df['TempDate'] = pd.to_datetime(hint_df['วัน/เดือน/ปี'], format='%d %b %Y', errors='coerce')
                 hint_df = hint_df[hint_df['TempDate'].dt.month == month_idx]
-                
-            # กรองตามชั้น
             if selected_floor != "ทั้งหมด":
                 hint_df = hint_df[hint_df["คุณอยู่ชั้นไหน"] == selected_floor]
-                
-            # กรองตามแผนก
             if selected_dept != "ทั้งหมด":
                 hint_df = hint_df[hint_df["แผนก"] == selected_dept]
                 
             available_dates = hint_df["วัน/เดือน/ปี"].dropna().unique().tolist()
             
-            # แสดงผลแถบแจ้งเตือน
-            if len(available_dates) == 0:
+            # แปลงรายการวันที่ทั้งหมดให้เป็นภาษาไทย พ.ศ.
+            thai_dates = [convert_to_thai_date(d) for d in available_dates]
+            
+            if len(thai_dates) == 0:
                 st.warning("⚠️ ไม่มีประวัติการรายงานตามเงื่อนไขที่คุณเลือก")
-            elif len(available_dates) <= 5:
-                st.info(f"📌 **วันที่มีประวัติการรายงาน:** {', '.join(available_dates)}")
+            elif len(thai_dates) <= 5:
+                st.info(f"📌 **วันที่มีประวัติการรายงาน:** {', '.join(thai_dates)}")
             else:
-                with st.expander(f"📌 มีประวัติการรายงานทั้งหมด {len(available_dates)} วัน (คลิกเพื่อดูรายชื่อวันที่)"):
-                    st.write(", ".join(available_dates))
+                with st.expander(f"📌 มีประวัติการรายงานทั้งหมด {len(thai_dates)} วัน (คลิกเพื่อดูรายชื่อวันที่)"):
+                    st.write(", ".join(thai_dates))
                     
     st.markdown("<br>", unsafe_allow_html=True)
     
     if not df.empty:
-        # --- ระบบกรองข้อมูลตามฟิลเตอร์สำหรับกราฟและตาราง ---
+        # --- ระบบกรอกกรองข้อมูลส่งเข้าตาราง/กราฟ ---
         filtered_df = df.copy()
-        
-        # 1. กรองวันที่จากปฏิทิน หรือ กรองตามเดือน (ถ้าไม่ได้เลือกวัน)
         if selected_date is not None:
             date_str = selected_date.strftime("%d %b %Y")
             if date_str.startswith("0"): 
@@ -178,27 +179,18 @@ if page == "📊 Dashboard สรุปผล":
             else:
                 filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"] == date_str]
         elif selected_month != "ทั้งหมด":
-            # ถ้าเลือกแค่เดือน (ไม่ได้เลือกวัน) ให้กราฟสรุปยอดของทั้งเดือนนั้น
             month_idx = months_th.index(selected_month)
             filtered_df['TempDate'] = pd.to_datetime(filtered_df['วัน/เดือน/ปี'], format='%d %b %Y', errors='coerce')
             filtered_df = filtered_df[filtered_df['TempDate'].dt.month == month_idx]
                 
-        # 2. กรองชั้น
         if selected_floor != "ทั้งหมด":
             filtered_df = filtered_df[filtered_df["คุณอยู่ชั้นไหน"] == selected_floor]
-            
-        # 3. กรองแผนก
         if selected_dept != "ทั้งหมด":
             filtered_df = filtered_df[filtered_df["แผนก"] == selected_dept]
             
         col_volume = "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด"
-        
-        # ... (ส่วนโค้ดด้านล่างที่เป็นการสร้าง KPI กราฟโดนัท และตาราง ปล่อยไว้เหมือนเดิมครับ) ...
-        
         total_reports = len(filtered_df)
         
-        # เกณฑ์ตรวจสอบ: ต้องมีคำว่า "เสียงดังฟังชัด" เท่านั้น นอกนั้นถือว่าไม่ผ่านเกณฑ์ทั้งหมด
-       # โค้ดส่วนนี้จะตรวจจับคำว่า "เสียงดังฟังชัด" (ซึ่งจะรวมคำว่า เสียงดังฟังชัดดี เข้าไปด้วยอัตโนมัติ)
         pass_reports = len(filtered_df[filtered_df[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)]) if total_reports > 0 else 0
         fail_reports = total_reports - pass_reports
         pass_percentage = (pass_reports / total_reports) * 100 if total_reports > 0 else 0
@@ -216,30 +208,26 @@ if page == "📊 Dashboard สรุปผล":
                 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # --- เลย์เอาต์ส่วนสรุปแผงควบคุมหลักด้านล่าง ---
+        # --- ส่วนเลย์เอาต์ล่าง: กราฟวงกลม และตารางรายงานรายชั้น ---
         chart_col, table_col = st.columns([1, 1.8])
         
         with chart_col:
             with st.container(border=True):
                 st.markdown("**สถานะอุปกรณ์ (สัดส่วนภาพรวม)**")
                 if total_reports > 0:
-                    chart_data = pd.DataFrame({
-                        "สถานะ": ["ผ่าน", "ไม่ผ่าน"],
-                        "จำนวน": [pass_reports, fail_reports]
-                    })
-                    fig = px.pie(chart_data, values='จำนวน', names='สถานะ', hole=0.6, color='สถานะ',
+                    chart_data = pd.DataFrame({"สถานะ": ["ผ่าน", "ไม่ผ่าน"], "จำนวน": [pass_reports, fail_reports]})
+                    fig = px.pie(chart_data, values='จำนวน', names='สถานะ', hole=0.6, color='get_status',
                                  color_discrete_map={"ผ่าน": "#28a745", "ไม่ผ่าน": "#dc3545"})
                     fig.update_traces(textinfo='percent+label', textfont_size=14)
                     fig.update_layout(showlegend=False, margin=dict(t=20, b=20, l=10, r=10), height=320)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
-                    st.info("ไม่มีข้อมูลสัดส่วน")
+                    st.info("ไม่มีข้อมูล")
 
         with table_col:
             with st.container(border=True):
                 st.markdown("**ผลการทดสอบตามพื้นที่**")
                 
-                # ตารางแสดง HTML/CSS แบบไร้เว้นวรรคเพื่อป้องกันการแสดงเป็น Code Block บั๊กใน Markdown
                 html_table = """<style>
 .custom-table { width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: center; font-size: 14px; }
 .custom-table th { padding: 10px 5px; border-bottom: 2px solid #555; color: #888; font-weight: normal;}
@@ -256,21 +244,18 @@ if page == "📊 Dashboard สรุปผล":
 <th style="text-align: left;">ความพร้อม</th>
 </tr>"""
                 
-                # สรุปรายชั้นอิงตามจำนวนฐานข้อมูล (df หลัก)
                 for floor in department_data.keys():
-                    floor_df = df[df["คุณอยู่ชั้นไหน"] == floor] if "คุณอยู่ชั้นไหน" in df.columns else pd.DataFrame()
+                    floor_df = filtered_df[filtered_df["คุณอยู่ชั้นไหน"] == floor] if "คุณอยู่ชั้นไหน" in filtered_df.columns else pd.DataFrame()
                     f_total = len(floor_df)
-                    if f_total == 0:
-                        continue 
+                    if f_total == 0: continue 
                         
                     f_pass = len(floor_df[floor_df[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)])
                     f_fail = f_total - f_pass
                     f_percent = (f_pass / f_total) * 100
                     
-                    # ตั้งค่าสีของแถบความคืบหน้าตามเกณฑ์ความพร้อม %
-                    if f_percent == 100: bar_color = "#28a745" # เขียว
-                    elif f_percent >= 90: bar_color = "#ffc107" # เหลือง
-                    else: bar_color = "#dc3545" # แดง
+                    if f_percent == 100: bar_color = "#28a745"
+                    elif f_percent >= 90: bar_color = "#ffc107"
+                    else: bar_color = "#dc3545"
                     
                     fail_color = "#dc3545" if f_fail > 0 else "inherit"
                     
@@ -280,36 +265,28 @@ if page == "📊 Dashboard สรุปผล":
 <td>{f_pass}</td>
 <td style="color: {fail_color};">{f_fail}</td>
 <td style="text-align: left;">
-<div class="bar-bg">
-<div class="bar-fill" style="width: {f_percent}%; background-color: {bar_color};"></div>
-</div>
+<div class="bar-bg"><div class="bar-fill" style="width: {f_percent}%; background-color: {bar_color};"></div></div>
 <span>{f_percent:.1f}%</span>
 </td>
 </tr>"""
                 
-                grand_total = len(df)
-                grand_pass = len(df[df[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)]) if grand_total > 0 else 0
-                grand_fail = grand_total - grand_pass
-                grand_readiness = (grand_pass / grand_total) * 100 if grand_total > 0 else 0
-                
                 html_table += f"""<tr style="font-weight: bold; background-color: rgba(255,255,255,0.05);">
 <td style="text-align: left;">รวมทั้งหมด</td>
-<td style="color: #17a2b8;">{grand_total}</td>
-<td style="color: #28a745;">{grand_pass}</td>
-<td style="color: #dc3545;">{grand_fail}</td>
-<td style="text-align: left; color: #28a745;">{grand_readiness:.1f}%</td>
+<td style="color: #17a2b8;">{total_reports}</td>
+<td style="color: #28a745;">{pass_reports}</td>
+<td style="color: #dc3545;">{fail_reports}</td>
+<td style="text-align: left; color: #28a745;">{pass_percentage:.1f}%</td>
 </tr>
 </table>"""
                 st.markdown(html_table, unsafe_allow_html=True)
-            
+                
         # ==========================================
-        # 🌟 ส่วนเพิ่มกราฟแนวโน้ม (Trend Line Chart) 
+        # 📈 ส่วนเพิ่มกราฟแนวโน้มรายวัน (แสดงผล พ.ศ. สวยงาม)
         # ==========================================
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
             st.markdown("**📈 แนวโน้มผลการทดสอบความพร้อมของระบบ (รายวัน)**")
             
-            # ดึงข้อมูลมาสร้างกราฟ โดยกรองแค่ ชั้น/แผนก (ไม่กรองวันที่ เพื่อให้เห็นเทรนด์ทั้งหมด)
             trend_df = df.copy()
             if selected_floor != "ทั้งหมด":
                 trend_df = trend_df[trend_df["คุณอยู่ชั้นไหน"] == selected_floor]
@@ -317,11 +294,9 @@ if page == "📊 Dashboard สรุปผล":
                 trend_df = trend_df[trend_df["แผนก"] == selected_dept]
                 
             if not trend_df.empty and "วัน/เดือน/ปี" in trend_df.columns:
-                # แปลงรูปแบบวันที่เพื่อเรียงลำดับก่อนหลังให้ถูกต้อง
                 trend_df['DateObj'] = pd.to_datetime(trend_df['วัน/เดือน/ปี'], format='%d %b %Y', errors='coerce')
                 trend_df = trend_df.dropna(subset=['DateObj']).sort_values('DateObj')
                 
-                # จัดกลุ่มและคำนวณยอด ผ่าน/ไม่ผ่าน รายวัน
                 daily_trend = trend_df.groupby('วัน/เดือน/ปี', sort=False).apply(
                     lambda x: pd.Series({
                         'Total': len(x),
@@ -329,57 +304,22 @@ if page == "📊 Dashboard สรุปผล":
                     })
                 ).reset_index()
                 
-                # คำนวณเปอร์เซ็นต์
                 daily_trend['Readiness (%)'] = (daily_trend['Pass'] / daily_trend['Total']) * 100
-                
-                # ฟังก์ชันแปลงชื่อเดือนภาษาอังกฤษ (Jul) เป็นตัวย่อภาษาไทย (ก.ค.) ให้เหมือนในรูป
-                thai_months = {"Jan":"ม.ค.", "Feb":"ก.พ.", "Mar":"มี.ค.", "Apr":"เม.ย.", "May":"พ.ค.", "Jun":"มิ.ย.", "Jul":"ก.ค.", "Aug":"ส.ค.", "Sep":"ก.ย.", "Oct":"ต.ค.", "Nov":"พ.ย.", "Dec":"ธ.ค."}
-                def to_thai_date(date_str):
-                    try:
-                        d, m, y = date_str.split()
-                        return f"{int(d)} {thai_months.get(m, m)}"
-                    except:
-                        return date_str
-                
-                daily_trend['ThaiDate'] = daily_trend['วัน/เดือน/ปี'].apply(to_thai_date)
-                
-                # เตรียมตัวเลขสำหรับโชว์เหนือจุดกราฟ (Text)
+                daily_trend['ThaiDate'] = daily_trend['วัน/เดือน/ปี'].apply(convert_to_thai_date)
                 daily_trend['Text'] = daily_trend['Readiness (%)'].apply(lambda x: f"{x:.1f}%")
                 
-                # สร้างกราฟด้วย Plotly
-                fig_line = px.line(
-                    daily_trend, 
-                    x='ThaiDate', 
-                    y='Readiness (%)', 
-                    text='Text',
-                    markers=True
-                )
-                
-                # ปรับแต่งสีและสไตล์ให้เหมือนรูปเป๊ะๆ
-                fig_line.update_traces(
-                    textposition="top center",     # ให้ตัวเลขอยู่บนจุด
-                    textfont_size=14,
-                    marker=dict(size=10, color="#28a745"), # จุดสีเขียว
-                    line=dict(color="#28a745", width=3)    # เส้นสีเขียว
-                )
-                fig_line.update_layout(
-                    yaxis_range=[0, 115], # เผื่อพื้นที่ด้านบนไว้ให้ตัวเลขไม่โดนตัด
-                    xaxis_title="",
-                    yaxis_title="ความพร้อมของระบบ (%)",
-                    margin=dict(t=20, b=20, l=10, r=10),
-                    height=320,
-                    # ทำให้พื้นหลังกราฟโปร่งใส และใส่เส้น Grid แนวนอนบางๆ
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    yaxis=dict(gridcolor="#e0e0e0", zerolinecolor="#e0e0e0"),
-                    xaxis=dict(gridcolor="rgba(0,0,0,0)") 
-                )
-                
+                fig_line = px.line(daily_trend, x='ThaiDate', y='Readiness (%)', text='Text', markers=True)
+                fig_line.update_traces(textposition="top center", textfont_size=14,
+                                       marker=dict(size=10, color="#28a745"), line=dict(color="#28a745", width=3))
+                fig_line.update_layout(yaxis_range=[0, 115], xaxis_title="", yaxis_title="ความพร้อมของระบบ (%)",
+                                       margin=dict(t=20, b=20, l=10, r=10), height=320, plot_bgcolor="rgba(0,0,0,0)",
+                                       yaxis=dict(gridcolor="#e0e0e0", zerolinecolor="#e0e0e0"), xaxis=dict(gridcolor="rgba(0,0,0,0)"))
                 st.plotly_chart(fig_line, use_container_width=True)
             else:
-                st.info("ไม่มีข้อมูลเพียงพอสำหรับสร้างกราฟแนวโน้ม")
-            
+                st.info("ไม่มีข้อมูลประวัติสำหรับสร้างกราฟแนวโน้มตามเงื่อนไขที่เลือก")
     else:
         st.warning("⚠️ ยังไม่มีข้อมูลในระบบ หรือเกิดข้อผิดพลาดในการเชื่อมต่อกรุณาตรวจสอบการเปิดใช้งาน doGet บน Apps Script")
+
 # ==========================================
 # 6. หน้าต่างการทำงาน: ฟอร์มกรอกรายงาน
 # ==========================================
@@ -388,15 +328,13 @@ elif page == "📝 ฟอร์มรายงาน":
     st.markdown("---")
     
     with st.container(border=True):
-        # ออกแบบส่วนควบคุมปกติไม่ผ่าน st.form เพื่อให้กล่องข้อความเปิด-ปิดตามทางเลือกได้ทันที (Interactive UI)
         selected_floor_form = st.selectbox("1. คุณอยู่ชั้นไหน?", list(department_data.keys()))
         selected_dept_form = st.selectbox("2. แผนกของคุณ", department_data.get(selected_floor_form, []))
         
-       # แก้ไขข้อความในวงเล็บ [ ] ให้ตรงกับ Google Sheets ของคุณเป๊ะๆ
+        # ปรับข้อความตัวเลือกวิทยุให้แมปตรงกับ Data Validation ใน Google Sheets ของคุณเป๊ะๆ
         selected_volume = st.radio("3. ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด?", 
             ["เสียงดังฟังชัดดี", "เสียงเบามากๆ", "ไม่ได้ยินเสียงโว้ย!", "เสียงขาดๆ หายๆ เสียง ซ่าๆ", "อื่นๆ"])
         
-        # เงื่อนไข: ช่องกรอกจะถูกปิดสีเทา (disabled=True) หากผู้ใช้เลือกหัวข้ออื่นๆ ที่ไม่ใช่คำว่า "อื่นๆ"
         is_disabled = True if selected_volume != "อื่นๆ" else False
         additional_info = st.text_area("4. ข้อมูลเพิ่มเติม (เปิดให้กรอกเฉพาะกรณีเลือกตัวเลือก 'อื่นๆ')", disabled=is_disabled)
         
@@ -410,19 +348,15 @@ elif page == "📝 ฟอร์มรายงาน":
             time_str = current_time.strftime("%H:%M:%S")
             
             payload = {
-                "date": date_str,
-                "time": time_str,
-                "floor": selected_floor_form,
-                "dept": selected_dept_form,
-                "volume": selected_volume,
-                "info": additional_info
+                "date": date_str, "time": time_str, "floor": selected_floor_form,
+                "dept": selected_dept_form, "volume": selected_volume, "info": additional_info
             }
             
             try:
                 response = requests.post(WEB_APP_URL, data=payload)
                 if response.text == "Success":
                     st.success(f"✅ บันทึกข้อมูลของ **{selected_dept_form}** เข้าสู่ระบบเรียบร้อยแล้ว!")
-                    st.cache_data.clear() # เคลียร์แคชระบบเพื่อพร้อมดึงตารางใหม่มาแสดงผล
+                    st.cache_data.clear() 
                 else:
                     st.error("❌ ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบสิทธิ์และสถานะ URL เว็บแอปของคุณอีกครั้ง")
             except Exception as e:
