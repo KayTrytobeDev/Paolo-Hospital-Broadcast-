@@ -16,13 +16,18 @@ st.markdown("""
     /* 🌟 นำเข้าฟอนต์ Oswald (Bold) และ Prompt จาก Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Prompt:wght@400;600;700&display=swap');
 
-    /* 🚨 ดักจับให้ครอบคลุมทุกชิ้นส่วน (เพิ่ม span, li, label, th, td เข้าไป) */
+    /* 🚨 ดักจับตัวหนังสือทั้งหมดให้เป็น Oswald + Prompt */
     html, body, p, div, h1, h2, h3, h4, h5, h6, a, button, input, select, textarea, span, label, li, th, td, blockquote {
         font-family: 'Oswald', 'Prompt', sans-serif !important;
     }
 
-    /* 🌟 ยกเว้นฟอนต์ไอคอน เพื่อให้ปุ่มลูกศรทำงานได้ปกติ */
-    .material-symbols-rounded, .material-icons {
+    /* 🌟 คืนชีพไอคอน Streamlit (เจาะจงเฉพาะปุ่มลูกศร, ไอคอนเมนู เพื่อป้องกันไอคอนแตก) */
+    .material-symbols-rounded, 
+    .material-icons,
+    [data-testid="stIconMaterial"],
+    [data-testid="stSidebarCollapseButton"] span,
+    [data-testid="collapsedControl"] span,
+    header span {
         font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
     }
 
