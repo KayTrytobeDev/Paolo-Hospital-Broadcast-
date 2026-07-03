@@ -126,32 +126,28 @@ if page == "📊 Dashboard สรุปผล":
         with table_col:
             st.subheader("🏢 ผลการทดสอบตามพื้นที่ (รายชั้น)")
             
-            # --- สร้างตาราง HTML/CSS แบบกำหนดเองให้เหมือนภาพตัวอย่าง ---
-            html_table = """
-            <style>
-            .custom-table { width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: center; font-size: 14px; }
-            .custom-table th { padding: 12px 8px; border-bottom: 2px solid #555; color: #888; font-weight: normal;}
-            .custom-table td { padding: 12px 8px; border-bottom: 1px solid #333; }
-            .bar-bg { width: 100px; height: 10px; background-color: #333; border-radius: 5px; display: inline-block; vertical-align: middle; margin-right: 10px; overflow: hidden;}
-            .bar-fill { height: 100%; border-radius: 5px; }
-            </style>
-            <table class="custom-table">
-                <tr>
-                    <th style="text-align: left;">พื้นที่ / อาคาร</th>
-                    <th>ทั้งหมด (จุด)</th>
-                    <th>ผ่าน</th>
-                    <th>ไม่ผ่าน</th>
-                    <th style="text-align: left;">ความพร้อม</th>
-                </tr>
-            """
+            # --- สร้างตาราง HTML/CSS (เอาเว้นวรรคด้านหน้าออกเพื่อไม่ให้ Streamlit มองเป็น Code Block) ---
+            html_table = """<style>
+.custom-table { width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: center; font-size: 14px; }
+.custom-table th { padding: 12px 8px; border-bottom: 2px solid #555; color: #888; font-weight: normal;}
+.custom-table td { padding: 12px 8px; border-bottom: 1px solid #333; }
+.bar-bg { width: 100px; height: 10px; background-color: #333; border-radius: 5px; display: inline-block; vertical-align: middle; margin-right: 10px; overflow: hidden;}
+.bar-fill { height: 100%; border-radius: 5px; }
+</style>
+<table class="custom-table">
+<tr>
+<th style="text-align: left;">พื้นที่ / อาคาร</th>
+<th>ทั้งหมด (จุด)</th>
+<th>ผ่าน</th>
+<th>ไม่ผ่าน</th>
+<th style="text-align: left;">ความพร้อม</th>
+</tr>"""
             
             # วนลูปสร้างข้อมูลแต่ละชั้น
             for floor in department_data.keys():
-                # ดึงเฉพาะข้อมูลของชั้นนั้นๆ
                 floor_df = df[df["คุณอยู่ชั้นไหน"] == floor] if "คุณอยู่ชั้นไหน" in df.columns else pd.DataFrame()
                 f_total = len(floor_df)
                 
-                # หากไม่มีการรายงานในชั้นนี้ให้ข้ามไป หรือจะแสดงเป็น 0 ก็ได้ (ในที่นี้ให้แสดงเฉพาะชั้นที่มีข้อมูล)
                 if f_total == 0:
                     continue 
                     
@@ -159,7 +155,6 @@ if page == "📊 Dashboard สรุปผล":
                 f_fail = f_total - f_pass
                 f_percent = (f_pass / f_total) * 100
                 
-                # เงื่อนไขสีแถบความพร้อม
                 if f_percent == 100:
                     bar_color = "#28a745" # สีเขียว
                 elif f_percent >= 90:
@@ -167,36 +162,31 @@ if page == "📊 Dashboard สรุปผล":
                 else:
                     bar_color = "#dc3545" # สีแดง
                 
-                # การแสดงสีตัวเลขไม่ผ่าน (ถ้ามีไม่ผ่านให้เป็นสีแดง)
                 fail_color = "#dc3545" if f_fail > 0 else "inherit"
                 
-                html_table += f"""
-                <tr>
-                    <td style="text-align: left; font-weight: bold;">{floor}</td>
-                    <td>{f_total}</td>
-                    <td>{f_pass}</td>
-                    <td style="color: {fail_color};">{f_fail}</td>
-                    <td style="text-align: left;">
-                        <div class="bar-bg">
-                            <div class="bar-fill" style="width: {f_percent}%; background-color: {bar_color};"></div>
-                        </div>
-                        <span>{f_percent:.1f}%</span>
-                    </td>
-                </tr>
-                """
+                html_table += f"""<tr>
+<td style="text-align: left; font-weight: bold;">{floor}</td>
+<td>{f_total}</td>
+<td>{f_pass}</td>
+<td style="color: {fail_color};">{f_fail}</td>
+<td style="text-align: left;">
+<div class="bar-bg">
+<div class="bar-fill" style="width: {f_percent}%; background-color: {bar_color};"></div>
+</div>
+<span>{f_percent:.1f}%</span>
+</td>
+</tr>"""
             
             # เพิ่มแถวสรุปยอดรวมด้านล่างสุด
             grand_readiness = (pass_reports / total_reports) * 100 if total_reports > 0 else 0
-            html_table += f"""
-                <tr style="font-weight: bold; background-color: rgba(255,255,255,0.05);">
-                    <td style="text-align: left;">รวมทั้งหมด</td>
-                    <td style="color: #17a2b8;">{total_reports}</td>
-                    <td style="color: #28a745;">{pass_reports}</td>
-                    <td style="color: #dc3545;">{fail_reports}</td>
-                    <td style="text-align: left; color: #28a745;">{grand_readiness:.1f}%</td>
-                </tr>
-            </table>
-            """
+            html_table += f"""<tr style="font-weight: bold; background-color: rgba(255,255,255,0.05);">
+<td style="text-align: left;">รวมทั้งหมด</td>
+<td style="color: #17a2b8;">{total_reports}</td>
+<td style="color: #28a745;">{pass_reports}</td>
+<td style="color: #dc3545;">{fail_reports}</td>
+<td style="text-align: left; color: #28a745;">{grand_readiness:.1f}%</td>
+</tr>
+</table>"""
             
             # เรนเดอร์ HTML ลงบน Streamlit
             st.markdown(html_table, unsafe_allow_html=True)
