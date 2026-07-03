@@ -112,15 +112,14 @@ if page == "📊 Dashboard สรุปผล":
         c1, c2, c3, c4 = st.columns(4)
         with c1: selected_month = st.selectbox("1. เลือกเดือน", months_th)
         with c2:
-            if selected_month != "ทั้งหมด":
-                current_year = datetime.now().year
-                month_index = months_th.index(selected_month)
-                last_day = calendar.monthrange(current_year, month_index)[1]
-                min_d = date(current_year, month_index, 1)
-                max_d = date(current_year, month_index, last_day)
-                selected_date = st.date_input("2. เลือกวันที่ (ปฏิทิน)", value=None, min_value=min_d, max_value=max_d)
+            # สร้างตัวเลือกวันที่จากข้อมูลที่มีจริงในระบบ
+            if not df.empty and "วัน/เดือน/ปี" in df.columns:
+                existing_dates = df["วัน/เดือน/ปี"].dropna().unique().tolist()
+                date_options = ["ทั้งหมด"] + existing_dates
             else:
-                selected_date = st.date_input("2. เลือกวันที่ (ปฏิทิน)", value=None)
+                date_options = ["ทั้งหมด"]
+                
+            selected_date = st.selectbox("2. เลือกวันที่ (ที่มีข้อมูล)", date_options)
                 
         with c3: selected_floor = st.selectbox("3. เลือกชั้น", ["ทั้งหมด"] + list(department_data.keys()))
         with c4:
@@ -135,6 +134,9 @@ if page == "📊 Dashboard สรุปผล":
         
         # กรองข้อมูลตามฟิลเตอร์
         filtered_df = df.copy()
+        if selected_date != "ทั้งหมด" and "วัน/เดือน/ปี" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"] == selected_date]
+            
         if selected_floor != "ทั้งหมด":
             filtered_df = filtered_df[filtered_df["คุณอยู่ชั้นไหน"] == selected_floor]
         if selected_dept != "ทั้งหมด":
