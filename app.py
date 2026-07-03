@@ -68,7 +68,10 @@ if page == "📊 Dashboard สรุปผล":
         
     st.markdown("---")
     
-    if not df.empty:
+   if not df.empty:
+        import plotly.express as px
+        
+        # ค้นหาคอลัมน์ระดับเสียงจาก Sheet1 
         col_volume = "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด" if "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด" in df.columns else df.columns[-2]
         
         total_reports = len(df)
@@ -76,13 +79,46 @@ if page == "📊 Dashboard สรุปผล":
         fail_reports = total_reports - pass_reports
         pass_percentage = (pass_reports / total_reports) * 100 if total_reports > 0 else 0
         
+        # 1. แสดงตัวเลขสรุป (Metrics)
         col1, col2, col3 = st.columns(3)
         col1.metric("📝 จำนวนรายงานทั้งหมด", f"{total_reports} รายการ")
-        col2.metric("✅ ผ่านเกณฑ์ (เสียงดังฟังชัด)", f"{pass_reports} รายการ")
+        col2.metric("✅ ผ่านเกณฑ์", f"{pass_reports} รายการ")
         col3.metric("🎯 เปอร์เซ็นต์ความพร้อม", f"{pass_percentage:.2f} %")
+        
+        st.markdown("---")
+        
+        # 2. สร้างกราฟโดนัทแสดง % ความพร้อม
+        if total_reports > 0:
+            st.subheader("📊 กราฟสัดส่วนความพร้อมของระบบเสียง")
+            
+            # เตรียมข้อมูลสำหรับทำกราฟ
+            chart_data = pd.DataFrame({
+                "สถานะ": ["ผ่านเกณฑ์ (เสียงดังฟังชัด)", "ไม่ผ่านเกณฑ์ (อื่นๆ)"],
+                "จำนวน": [pass_reports, fail_reports]
+            })
+            
+            # สร้างกราฟด้วย Plotly
+            fig = px.pie(
+                chart_data, 
+                values='จำนวน', 
+                names='สถานะ', 
+                hole=0.5, # กำหนดความกว้างของรูตรงกลาง (โดนัท)
+                color='สถานะ',
+                color_discrete_map={
+                    "ผ่านเกณฑ์ (เสียงดังฟังชัด)": "#28a745", # สีเขียว
+                    "ไม่ผ่านเกณฑ์ (อื่นๆ)": "#dc3545"      # สีแดง
+                }
+            )
+            
+            # ปรับแต่งให้แสดง % ชัดเจน
+            fig.update_traces(textinfo='percent+label', textfont_size=16)
+            fig.update_layout(showlegend=False) # ซ่อน Legend เพื่อความสะอาดตา
+            
+            # นำกราฟมาแสดงบน Streamlit
+            st.plotly_chart(fig, use_container_width=True)
+            
     else:
-        st.info("ℹ️ ยังไม่มีข้อมูลในระบบ หรือลืมใส่ PUBLIC_CSV_URL ในโค้ด")
-
+        st.info("ℹ️ ยังไม่มีข้อมูลในระบบ หรือกำลังรอการเชื่อมต่อข้อมูล")
 # ==========================================
 # 5. หน้าต่างการทำงาน: Form
 # ==========================================
