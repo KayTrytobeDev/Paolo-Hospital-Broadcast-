@@ -109,6 +109,7 @@ if page == "📊 Dashboard สรุปผล":
         total_reports = len(filtered_df)
         
         # เกณฑ์ตรวจสอบ: ต้องมีคำว่า "เสียงดังฟังชัด" เท่านั้น นอกนั้นถือว่าไม่ผ่านเกณฑ์ทั้งหมด
+       # โค้ดส่วนนี้จะตรวจจับคำว่า "เสียงดังฟังชัด" (ซึ่งจะรวมคำว่า เสียงดังฟังชัดดี เข้าไปด้วยอัตโนมัติ)
         pass_reports = len(filtered_df[filtered_df[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)]) if total_reports > 0 else 0
         fail_reports = total_reports - pass_reports
         pass_percentage = (pass_reports / total_reports) * 100 if total_reports > 0 else 0
