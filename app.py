@@ -16,13 +16,13 @@ st.markdown("""
     /* 🌟 นำเข้าฟอนต์ Oswald (Bold) และ Prompt จาก Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Prompt:wght@400;600;700&display=swap');
 
-    /* 🚨 ระบุฟอนต์เจาะจงเฉพาะข้อความ (หลีกเลี่ยงการใช้ * เพื่อไม่ให้กระทบไอคอน) */
-    html, body, p, div, h1, h2, h3, h4, h5, h6, a, button, input, select, textarea {
+    /* 🚨 ดักจับให้ครอบคลุมทุกชิ้นส่วน (เพิ่ม span, li, label, th, td เข้าไป) */
+    html, body, p, div, h1, h2, h3, h4, h5, h6, a, button, input, select, textarea, span, label, li, th, td, blockquote {
         font-family: 'Oswald', 'Prompt', sans-serif !important;
     }
 
-    /* 🌟 คืนค่าฟอนต์ให้ Icon ของ Streamlit กลับมาเป็นรูปภาพเหมือนเดิม */
-    .material-symbols-rounded, .material-icons, [class^="st-emotion-"] {
+    /* 🌟 ยกเว้นฟอนต์ไอคอน เพื่อให้ปุ่มลูกศรทำงานได้ปกติ */
+    .material-symbols-rounded, .material-icons {
         font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
     }
 
