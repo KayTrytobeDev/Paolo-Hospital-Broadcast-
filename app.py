@@ -32,13 +32,21 @@ department_data = {
 months_th = ["ทั้งหมด", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"]
 
 # ==========================================
-# 3. ฟังก์ชันดึงข้อมูลมาทำ Dashboard
+# 3. ฟังก์ชันดึงข้อมูลแบบ Real-time (ผ่าน Apps Script)
 # ==========================================
-@st.cache_data(ttl=10) 
+@st.cache_data(ttl=0) # ตั้งค่า 0 เพื่อให้ดึงใหม่ทุกครั้ง ไม่จำข้อมูลเก่า
 def load_data():
     try:
-        df = pd.read_csv(PUBLIC_CSV_URL)
-        return df
+        # ใช้ WEB_APP_URL ตัวเดียวจบ ไม่ต้องใช้ PUBLIC_CSV_URL แล้วครับ
+        response = requests.get(WEB_APP_URL)
+        data = response.json()
+        
+        # ถ้าระบบส่งข้อมูลกลับมา (แถวแรกเป็นหัวตาราง แถวต่อไปเป็นข้อมูล)
+        if len(data) > 1:
+            df = pd.DataFrame(data[1:], columns=data[0])
+            return df
+        else:
+            return pd.DataFrame()
     except Exception as e:
         return pd.DataFrame()
 
@@ -50,6 +58,11 @@ df = load_data()
 st.sidebar.title("เมนูหลัก")
 page = st.sidebar.radio("เลือกหน้าต่างการทำงาน:", ["📊 Dashboard สรุปผล", "📝 ฟอร์มรายงาน"])
 st.sidebar.markdown("---")
+
+# เพิ่มปุ่มกดรีเฟรชข้อมูล
+if st.sidebar.button("🔄 ดึงข้อมูลล่าสุดเดี๋ยวนี้"):
+    st.cache_data.clear()
+    st.rerun() # สั่งให้ Streamlit รีเฟรชหน้าเว็บ 1 รอบ
 
 # ==========================================
 # 5. หน้าต่างการทำงาน: Dashboard
