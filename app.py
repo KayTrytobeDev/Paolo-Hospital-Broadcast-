@@ -13,7 +13,7 @@ st.set_page_config(page_title="Dashboard ระบบเสียง", layout="w
 # 1. การตั้งค่า URL ของ Google Apps Script
 # ==========================================
 # ⚠️ ใส่ Web App URL ที่ได้จากขั้นตอนการ Deploy ใน Google Apps Script (ใช้ทั้งรับและส่งข้อมูล)
-WEB_APP_URL = "https://script.google.com/macros/s/ใส่_URL_ของคุณตรงนี้/exec" 
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwhENUa0dRVKuwJyX8IgoJwszlpsvxWssWXBsATe-cKUjNlsFuFgAtoRIvM39iXKEx/exec" 
 
 # ==========================================
 # 2. ข้อมูลแผนกตั้งต้น (อิงจากโครงสร้างโรงพยาบาล)
