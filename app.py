@@ -96,55 +96,69 @@ if page == "📊 Dashboard สรุปผล":
         
     st.markdown("---")
     
-    if not df.empty:
-        filtered_df = df.copy()
-        if selected_floor != "ทั้งหมด" and "คุณอยู่ชั้นไหน" in filtered_df.columns:
-            filtered_df = filtered_df[filtered_df["คุณอยู่ชั้นไหน"] == selected_floor]
-        if selected_dept != "ทั้งหมด" and "แผนก" in filtered_df.columns:
-            filtered_df = filtered_df[filtered_df["แผนก"] == selected_dept]
+if not df.empty:
+        # กำหนดชื่อคอลัมน์ให้ตรงกับที่ Apps Script ส่งมา (ป้องกันการเยื้องของ Header)
+        # ตัวแปรนี้จะแมปตามคอลัมน์ใน Sheet1 ของคุณ
+        df.columns = ["วัน/เดือน/ปี", "เวลา", "คุณอยู่ชั้นไหน", "แผนก", "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด", "ข้อมูลเพิ่มเติม"]
         
-        col_volume = "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด" if "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด" in filtered_df.columns else filtered_df.columns[-2]
+        filtered_df = df.copy()
+        
+        # ระบบกรองข้อมูลตามฟิลเตอร์
+        if selected_floor != "ทั้งหมด":
+            filtered_df = filtered_df[filtered_df["คุณอยู่ชั้นไหน"] == selected_floor]
+        if selected_dept != "ทั้งหมด":
+            filtered_df = filtered_df[filtered_df["แผนก"] == selected_dept]
+            
+        col_volume = "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด"
         
         total_reports = len(filtered_df)
+        
+        # ตรวจจับคำว่า "เสียงดังฟังชัด" หรือ "เสียงดังฟังชัดดี"
         pass_reports = len(filtered_df[filtered_df[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)]) if total_reports > 0 else 0
         fail_reports = total_reports - pass_reports
         pass_percentage = (pass_reports / total_reports) * 100 if total_reports > 0 else 0
         
-        # --- แสดงตัวเลขสรุปภาพรวม ---
-        col1, col2, col3 = st.columns(3)
-        col1.metric("📝 จำนวนรายงานทั้งหมด", f"{total_reports} รายการ")
-        col2.metric("✅ ผ่านเกณฑ์ (เสียงดังฟังชัด)", f"{pass_reports} รายการ")
-        col3.metric("🎯 เปอร์เซ็นต์ความพร้อม", f"{pass_percentage:.2f} %")
+        # --- กล่องสรุปภาพรวม (KPI 4 กล่อง) ---
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+        with kpi1:
+            with st.container(border=True): st.metric("🎯 ความพร้อมของระบบ", f"{pass_percentage:.1f}%")
+        with kpi2:
+            with st.container(border=True): st.metric("🔊 จำนวนจุดทั้งหมด", f"{total_reports}")
+        with kpi3:
+            with st.container(border=True): st.metric("✅ ผ่านการทดสอบ", f"{pass_reports}")
+        with kpi4:
+            with st.container(border=True): st.metric("❌ ไม่ผ่านการทดสอบ", f"{fail_reports}")
+                
+        st.markdown("<br>", unsafe_allow_html=True)
         
-        st.markdown("---")
-        
-        # --- แบ่งเลย์เอาต์ซ้าย-ขวา สำหรับกราฟโดนัท และ ตารางสรุปรายชั้น ---
-        chart_col, table_col = st.columns([1, 1.5])
+        # --- เลย์เอาต์ส่วนล่าง: กราฟ และ ตารางสรุปรายชั้น ---
+        chart_col, table_col = st.columns([1, 1.8])
         
         with chart_col:
-            if total_reports > 0:
-                st.subheader("📊 สัดส่วนภาพรวม")
-                chart_data = pd.DataFrame({
-                    "สถานะ": ["ผ่านเกณฑ์", "ไม่ผ่านเกณฑ์"],
-                    "จำนวน": [pass_reports, fail_reports]
-                })
-                fig = px.pie(chart_data, values='จำนวน', names='สถานะ', hole=0.5, color='สถานะ',
-                             color_discrete_map={"ผ่านเกณฑ์": "#28a745", "ไม่ผ่านเกณฑ์": "#dc3545"})
-                fig.update_traces(textinfo='percent+label', textfont_size=16)
-                fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("ไม่มีข้อมูลสัดส่วน")
+            with st.container(border=True):
+                st.markdown("**สถานะอุปกรณ์ (สัดส่วนภาพรวม)**")
+                if total_reports > 0:
+                    chart_data = pd.DataFrame({
+                        "สถานะ": ["ผ่าน", "ไม่ผ่าน"],
+                        "จำนวน": [pass_reports, fail_reports]
+                    })
+                    fig = px.pie(chart_data, values='จำนวน', names='สถานะ', hole=0.6, color='สถานะ',
+                                 color_discrete_map={"ผ่าน": "#28a745", "ไม่ผ่าน": "#dc3545"})
+                    fig.update_traces(textinfo='percent+label', textfont_size=14)
+                    fig.update_layout(showlegend=False, margin=dict(t=20, b=20, l=10, r=10), height=320)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("ไม่มีข้อมูล")
 
         with table_col:
-            st.subheader("🏢 ผลการทดสอบตามพื้นที่ (รายชั้น)")
-            
-            # --- สร้างตาราง HTML/CSS (เอาเว้นวรรคด้านหน้าออกเพื่อไม่ให้ Streamlit มองเป็น Code Block) ---
-            html_table = """<style>
+            with st.container(border=True):
+                st.markdown("**ผลการทดสอบตามพื้นที่**")
+                
+                html_table = """<style>
 .custom-table { width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: center; font-size: 14px; }
-.custom-table th { padding: 12px 8px; border-bottom: 2px solid #555; color: #888; font-weight: normal;}
-.custom-table td { padding: 12px 8px; border-bottom: 1px solid #333; }
-.bar-bg { width: 100px; height: 10px; background-color: #333; border-radius: 5px; display: inline-block; vertical-align: middle; margin-right: 10px; overflow: hidden;}
+.custom-table th { padding: 10px 5px; border-bottom: 2px solid #555; color: #888; font-weight: normal;}
+.custom-table td { padding: 10px 5px; border-bottom: 1px solid #333; }
+.bar-bg { width: 80px; height: 10px; background-color: #333; border-radius: 5px; display: inline-block; vertical-align: middle; margin-right: 8px; overflow: hidden;}
 .bar-fill { height: 100%; border-radius: 5px; }
 </style>
 <table class="custom-table">
@@ -155,29 +169,25 @@ if page == "📊 Dashboard สรุปผล":
 <th>ไม่ผ่าน</th>
 <th style="text-align: left;">ความพร้อม</th>
 </tr>"""
-            
-            # วนลูปสร้างข้อมูลแต่ละชั้น
-            for floor in department_data.keys():
-                floor_df = df[df["คุณอยู่ชั้นไหน"] == floor] if "คุณอยู่ชั้นไหน" in df.columns else pd.DataFrame()
-                f_total = len(floor_df)
                 
-                if f_total == 0:
-                    continue 
+                for floor in department_data.keys():
+                    # นับแยกรายชั้นจากข้อมูลดิบทั้งหมด (df) เพื่อให้ตารางแสดงครบทุกชั้นที่มีข้อมูล
+                    floor_df = df[df["คุณอยู่ชั้นไหน"] == floor] if "คุณอยู่ชั้นไหน" in df.columns else pd.DataFrame()
+                    f_total = len(floor_df)
+                    if f_total == 0:
+                        continue 
+                        
+                    f_pass = len(floor_df[floor_df[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)])
+                    f_fail = f_total - f_pass
+                    f_percent = (f_pass / f_total) * 100
                     
-                f_pass = len(floor_df[floor_df[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)])
-                f_fail = f_total - f_pass
-                f_percent = (f_pass / f_total) * 100
-                
-                if f_percent == 100:
-                    bar_color = "#28a745" # สีเขียว
-                elif f_percent >= 90:
-                    bar_color = "#ffc107" # สีเหลือง
-                else:
-                    bar_color = "#dc3545" # สีแดง
-                
-                fail_color = "#dc3545" if f_fail > 0 else "inherit"
-                
-                html_table += f"""<tr>
+                    if f_percent == 100: bar_color = "#28a745"
+                    elif f_percent >= 90: bar_color = "#ffc107"
+                    else: bar_color = "#dc3545"
+                    
+                    fail_color = "#dc3545" if f_fail > 0 else "inherit"
+                    
+                    html_table += f"""<tr>
 <td style="text-align: left; font-weight: bold;">{floor}</td>
 <td>{f_total}</td>
 <td>{f_pass}</td>
@@ -189,23 +199,25 @@ if page == "📊 Dashboard สรุปผล":
 <span>{f_percent:.1f}%</span>
 </td>
 </tr>"""
-            
-            # เพิ่มแถวสรุปยอดรวมด้านล่างสุด
-            grand_readiness = (pass_reports / total_reports) * 100 if total_reports > 0 else 0
-            html_table += f"""<tr style="font-weight: bold; background-color: rgba(255,255,255,0.05);">
+                
+                # ยอดรวมด้านล่างสุดดึงมาจากยอดคำนวณฟิลเตอร์
+                grand_total = len(df)
+                grand_pass = len(df[df[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)]) if grand_total > 0 else 0
+                grand_fail = grand_total - grand_pass
+                grand_readiness = (grand_pass / grand_total) * 100 if grand_total > 0 else 0
+                
+                html_table += f"""<tr style="font-weight: bold; background-color: rgba(255,255,255,0.05);">
 <td style="text-align: left;">รวมทั้งหมด</td>
-<td style="color: #17a2b8;">{total_reports}</td>
-<td style="color: #28a745;">{pass_reports}</td>
-<td style="color: #dc3545;">{fail_reports}</td>
+<td style="color: #17a2b8;">{grand_total}</td>
+<td style="color: #28a745;">{grand_pass}</td>
+<td style="color: #dc3545;">{grand_fail}</td>
 <td style="text-align: left; color: #28a745;">{grand_readiness:.1f}%</td>
 </tr>
 </table>"""
-            
-            # เรนเดอร์ HTML ลงบน Streamlit
-            st.markdown(html_table, unsafe_allow_html=True)
+                st.markdown(html_table, unsafe_allow_html=True)
             
     else:
-        st.warning("⚠️ ยังไม่มีข้อมูลในระบบ หรือยังไม่ได้ตั้งค่า PUBLIC_CSV_URL ให้ถูกต้อง")
+        st.warning("⚠️ ยังไม่มีข้อมูลในระบบ หรือเกิดข้อผิดพลาดในการดึงข้อมูลจาก WEB_APP_URL")
 
 # ==========================================
 # 6. หน้าต่างการทำงาน: Form
