@@ -13,9 +13,8 @@ st.set_page_config(page_title="Dashboard ระบบเสียง", layout="w
 
 st.markdown("""
     <style>
-    /* ซ่อนเมนูขยะของ Streamlit เพื่อให้ดูเหมือนแอปพลิเคชันจริง */
+    /* ซ่อนเมนูตั้งค่าและลายน้ำของ Streamlit แต่ "ห้ามซ่อน header" เพื่อให้ปุ่มเมนูบนมือถือยังทำงานได้ */
     #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
     footer {visibility: hidden;}
     
     /* ป้องกัน iOS ซูมหน้าจออัตโนมัติเวลากดพิมพ์ */
