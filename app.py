@@ -110,7 +110,7 @@ if page == "📊 Dashboard สรุปผล":
     if not df.empty:
         df.columns = ["วัน/เดือน/ปี", "เวลา", "คุณอยู่ชั้นไหน", "แผนก", "ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด", "ข้อมูลเพิ่มเติม"]
     
-    # --- กล่องตัวกรองข้อมูล ---
+# --- กล่องตัวกรองข้อมูล ---
     with st.container(border=True):
         st.markdown("**🔍 ตัวกรองข้อมูล (Filters)**")
         c1, c2, c3, c4 = st.columns(4)
@@ -134,15 +134,31 @@ if page == "📊 Dashboard สรุปผล":
             depts_list = ["ทั้งหมด"] + department_data[selected_floor] if selected_floor != "ทั้งหมด" else ["ทั้งหมด"]
             selected_dept = st.selectbox("4. เลือกแผนก", depts_list)
             
-       # 🌟 โค้ดแสดงแถบแจ้งเตือน (Hint) แบบซ่อนได้เพื่อประหยัดพื้นที่
-        if not df.empty:
-            available_dates = df["วัน/เดือน/ปี"].dropna().unique().tolist()
+        # 🌟 สร้างแถบแจ้งเตือน (Hint) ที่อัปเดตตามฟิลเตอร์ เดือน/ชั้น/แผนก
+        if not df.empty and "วัน/เดือน/ปี" in df.columns:
+            hint_df = df.copy()
             
-            # ถ้ามีประวัติการรายงานไม่เกิน 5 วัน ให้โชว์แถบสีฟ้าปกติ
-            if len(available_dates) <= 5:
+            # กรองเอาเฉพาะเดือนที่เลือก
+            if selected_month != "ทั้งหมด":
+                month_idx = months_th.index(selected_month)
+                hint_df['TempDate'] = pd.to_datetime(hint_df['วัน/เดือน/ปี'], format='%d %b %Y', errors='coerce')
+                hint_df = hint_df[hint_df['TempDate'].dt.month == month_idx]
+                
+            # กรองตามชั้น
+            if selected_floor != "ทั้งหมด":
+                hint_df = hint_df[hint_df["คุณอยู่ชั้นไหน"] == selected_floor]
+                
+            # กรองตามแผนก
+            if selected_dept != "ทั้งหมด":
+                hint_df = hint_df[hint_df["แผนก"] == selected_dept]
+                
+            available_dates = hint_df["วัน/เดือน/ปี"].dropna().unique().tolist()
+            
+            # แสดงผลแถบแจ้งเตือน
+            if len(available_dates) == 0:
+                st.warning("⚠️ ไม่มีประวัติการรายงานตามเงื่อนไขที่คุณเลือก")
+            elif len(available_dates) <= 5:
                 st.info(f"📌 **วันที่มีประวัติการรายงาน:** {', '.join(available_dates)}")
-            
-            # แต่ถ้ามีเยอะกว่า 5 วัน ให้ซ่อนไว้ในกล่องกดขยาย (Expander) เพื่อไม่ให้รกหน้าจอ
             else:
                 with st.expander(f"📌 มีประวัติการรายงานทั้งหมด {len(available_dates)} วัน (คลิกเพื่อดูรายชื่อวันที่)"):
                     st.write(", ".join(available_dates))
@@ -150,10 +166,10 @@ if page == "📊 Dashboard สรุปผล":
     st.markdown("<br>", unsafe_allow_html=True)
     
     if not df.empty:
-        # --- ระบบกรองข้อมูลตามฟิลเตอร์ ---
+        # --- ระบบกรองข้อมูลตามฟิลเตอร์สำหรับกราฟและตาราง ---
         filtered_df = df.copy()
         
-        # 1. กรองวันที่จากปฏิทิน
+        # 1. กรองวันที่จากปฏิทิน หรือ กรองตามเดือน (ถ้าไม่ได้เลือกวัน)
         if selected_date is not None:
             date_str = selected_date.strftime("%d %b %Y")
             if date_str.startswith("0"): 
@@ -161,6 +177,11 @@ if page == "📊 Dashboard สรุปผล":
                 filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"].isin([date_str, date_str_no_zero])]
             else:
                 filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"] == date_str]
+        elif selected_month != "ทั้งหมด":
+            # ถ้าเลือกแค่เดือน (ไม่ได้เลือกวัน) ให้กราฟสรุปยอดของทั้งเดือนนั้น
+            month_idx = months_th.index(selected_month)
+            filtered_df['TempDate'] = pd.to_datetime(filtered_df['วัน/เดือน/ปี'], format='%d %b %Y', errors='coerce')
+            filtered_df = filtered_df[filtered_df['TempDate'].dt.month == month_idx]
                 
         # 2. กรองชั้น
         if selected_floor != "ทั้งหมด":
