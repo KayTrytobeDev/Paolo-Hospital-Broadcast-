@@ -60,14 +60,15 @@ st.markdown("""
         font-size: 16px !important;
     }
     
-    /* ขยายขนาดปุ่มกดให้เต็มนิ้ว สัมผัสง่ายและดู Modern */
+   /* ขยายขนาดปุ่มกดให้เต็มนิ้ว สัมผัสง่ายและดู Modern */
     .stButton>button {
         width: 100%;
         height: 55px;
         font-size: 18px !important;
         font-weight: bold !important;
-        border-radius: 12px !important; /* ทำให้ขอบมนขึ้น ดูสะอาดตา */
+        border-radius: 12px !important; 
         margin-top: 15px !important;
+        justify-content: center !important; /* เพิ่มบรรทัดนี้เพื่อบังคับให้อยู่กึ่งกลางเป๊ะๆ */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -138,7 +139,7 @@ st.sidebar.title("เมนูหลัก")
 page = st.sidebar.radio("เลือกหน้าต่างการทำงาน:", ["📊 Dashboard สรุปผล", "📝 ฟอร์มรายงาน"])
 st.sidebar.markdown("---")
 
-if st.sidebar.button("🔄 ดึงข้อมูลล่าสุดเดี๋ยวนี้"):
+if st.sidebar.button("🔄 ดึงข้อมูลล่าสุดเดี๋ยวนี้", use_container_width=True):
     st.cache_data.clear()
     st.rerun()
 
