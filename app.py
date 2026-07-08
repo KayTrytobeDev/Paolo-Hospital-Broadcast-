@@ -8,7 +8,7 @@ import plotly.express as px
 import os
 
 # ==========================================
-# 📱 ตั้งค่าหน้าเพจ & โครงสร้าง CSS (เวอร์ชันออริจินัล)
+# 📱 ตั้งค่าหน้าเพจ & โครงสร้าง CSS (เวอร์ชันออริจินัล + ตาราง Sheet1)
 # ==========================================
 st.set_page_config(page_title="Dashboard ระบบเสียง", layout="wide", page_icon="🔊")
 
@@ -84,7 +84,7 @@ def load_data():
 df, df_depts = load_data()
 
 # ==========================================
-# 4. สร้างพจนานุกรมชั้นและแผนกอัตโนมัติ (จากแนวกว้าง)
+# 4. สร้างพจนานุกรมชั้นและแผนกอัตโนมัติ
 # ==========================================
 department_data = {}
 if not df_depts.empty:
@@ -138,7 +138,6 @@ if page == "📊 Dashboard สรุปผล":
                 depts_list = ["ทั้งหมด"] + department_data.get(selected_floor, []) if selected_floor != "ทั้งหมด" else ["ทั้งหมด"]
                 selected_dept = st.selectbox("4. เลือกแผนก", depts_list)
                 
-            # แจ้งเตือนวันที่
             hint_df = df.copy()
             if selected_month != "ทั้งหมด":
                 month_idx = months_th.index(selected_month)
@@ -160,7 +159,7 @@ if page == "📊 Dashboard สรุปผล":
                     
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # 🌟 คัดกรองข้อมูล (แก้ไขบั๊กปฏิทินแล้ว)
+        # คัดกรองข้อมูล
         filtered_df = df.copy()
         if isinstance(selected_date, date):
             date_str = selected_date.strftime("%d %b %Y")
@@ -247,7 +246,6 @@ if page == "📊 Dashboard สรุปผล":
             if selected_floor != "ทั้งหมด": trend_df = trend_df[trend_df["คุณอยู่ชั้นไหน"] == selected_floor]
             if selected_dept != "ทั้งหมด": trend_df = trend_df[trend_df["แผนก"] == selected_dept]
                 
-            # 🌟 (แก้ไขบั๊กกราฟพัง KeyError แล้ว)
             if not trend_df.empty and "วัน/เดือน/ปี" in trend_df.columns:
                 trend_df['DateObj'] = pd.to_datetime(trend_df['วัน/เดือน/ปี'], format='%d %b %Y', errors='coerce')
                 trend_df = trend_df.dropna(subset=['DateObj'])
@@ -272,20 +270,29 @@ if page == "📊 Dashboard สรุปผล":
                 fig_line.update_traces(textposition="top center", textfont_size=14, marker=dict(size=10, color="#28a745"), line=dict(color="#28a745", width=3))
                 
                 fig_line.update_layout(
-                    yaxis_range=[0, 115], 
-                    xaxis_title="", 
-                    yaxis_title="ความพร้อมของระบบ (%)", 
-                    margin=dict(t=20, b=20, l=10, r=10), 
-                    height=320, 
-                    plot_bgcolor="rgba(0,0,0,0)", 
-                    yaxis=dict(gridcolor="#e0e0e0", zerolinecolor="#e0e0e0"), 
-                    xaxis=dict(gridcolor="rgba(0,0,0,0)", tickangle=-45)
+                    yaxis_range=[0, 115], xaxis_title="", yaxis_title="ความพร้อมของระบบ (%)", 
+                    margin=dict(t=20, b=20, l=10, r=10), height=320, plot_bgcolor="rgba(0,0,0,0)", 
+                    yaxis=dict(gridcolor="#e0e0e0", zerolinecolor="#e0e0e0"), xaxis=dict(gridcolor="rgba(0,0,0,0)", tickangle=-45)
                 )
                 st.plotly_chart(fig_line, use_container_width=True)
             else:
                 st.info("ไม่มีข้อมูลประวัติสำหรับสร้างกราฟแนวโน้มตามเงื่อนไขที่เลือก")
+
+        # ========================================================
+        # 🌟 ส่วนที่เพิ่มเข้ามาใหม่: โชว์ตารางข้อมูลดิบจาก Sheet 1
+        # ========================================================
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("**📋 ข้อมูลการรายงานทั้งหมด (จาก Sheet 1)**")
+            if not filtered_df.empty:
+                # เรียงข้อมูลใหม่ล่าสุดขึ้นก่อน
+                display_df = filtered_df.drop(columns=['TempDate'], errors='ignore').iloc[::-1]
+                st.dataframe(display_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("ไม่มีข้อมูลในเงื่อนไขที่เลือก")
+
     else:
-        # 🌟 อัปเดตส่วนที่ไม่มีข้อมูล ให้โชว์รูปภาพแทนตามที่ขอครับ!
+        # กรณีไม่มีข้อมูล (โชว์รูปภาพ)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             if os.path.exists("no_data.png"):
