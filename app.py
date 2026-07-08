@@ -38,7 +38,7 @@ st.markdown("""
 # 1. การตั้งค่า URL ของ Google Apps Script
 # ==========================================
 # ⚠️ เปลี่ยน URL ด้านล่างนี้เป็น URL ใหม่ที่ได้จากการ Deploy ล่าสุด
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwhENUa0dRVKuwJyX8IgoJwszlpsvxWssWXBsATe-cKUjNlsFuFgAtoRIvM39iXKEx/exec" 
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzeszDpSeSlPoLd74PhbOwNgNfise1MHDlUCmkOUIWfHDntutl-_Ewntt4Gq8OFqdI8/exec" 
 
 # ==========================================
 # 2. ฟังก์ชันแปลวันที่
@@ -160,9 +160,9 @@ if page == "📊 Dashboard สรุปผล":
                     
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # คัดกรองข้อมูล
+        # คัดกรองข้อมูล (แก้ไขบั๊กปฏิทิน)
         filtered_df = df.copy()
-        if selected_date is not None:
+        if isinstance(selected_date, date):
             date_str = selected_date.strftime("%d %b %Y")
             date_str_no_zero = date_str[1:] if date_str.startswith("0") else date_str
             filtered_df = filtered_df[filtered_df["วัน/เดือน/ปี"].isin([date_str, date_str_no_zero])]
@@ -242,28 +242,48 @@ if page == "📊 Dashboard สรุปผล":
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
             st.markdown("**📈 แนวโน้มผลการทดสอบความพร้อมของระบบ (รายวัน)**")
+            
             trend_df = df.copy()
             if selected_floor != "ทั้งหมด": trend_df = trend_df[trend_df["คุณอยู่ชั้นไหน"] == selected_floor]
             if selected_dept != "ทั้งหมด": trend_df = trend_df[trend_df["แผนก"] == selected_dept]
                 
+            # (แก้ไขบั๊กกราฟพัง KeyError)
             if not trend_df.empty and "วัน/เดือน/ปี" in trend_df.columns:
                 trend_df['DateObj'] = pd.to_datetime(trend_df['วัน/เดือน/ปี'], format='%d %b %Y', errors='coerce')
-                trend_df = trend_df.dropna(subset=['DateObj']).sort_values('DateObj')
+                trend_df = trend_df.dropna(subset=['DateObj'])
+                
+            if not trend_df.empty and "วัน/เดือน/ปี" in trend_df.columns:
+                trend_df = trend_df.sort_values('DateObj')
                 
                 daily_trend = trend_df.groupby('วัน/เดือน/ปี', sort=False).apply(
-                    lambda x: pd.Series({'Total': len(x), 'Pass': len(x[x[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)])})
+                    lambda x: pd.Series({
+                        'Total': len(x), 
+                        'Pass': len(x[x[col_volume].astype(str).str.contains("เสียงดังฟังชัด", na=False)]),
+                        'DateObj': x['DateObj'].iloc[0]
+                    })
                 ).reset_index()
                 
+                daily_trend = daily_trend.sort_values('DateObj')
                 daily_trend['Readiness (%)'] = (daily_trend['Pass'] / daily_trend['Total']) * 100
                 daily_trend['ThaiDate'] = daily_trend['วัน/เดือน/ปี'].apply(convert_to_thai_date)
                 daily_trend['Text'] = daily_trend['Readiness (%)'].apply(lambda x: f"{x:.1f}%")
                 
                 fig_line = px.line(daily_trend, x='ThaiDate', y='Readiness (%)', text='Text', markers=True)
                 fig_line.update_traces(textposition="top center", textfont_size=14, marker=dict(size=10, color="#28a745"), line=dict(color="#28a745", width=3))
-                fig_line.update_layout(yaxis_range=[0, 115], xaxis_title="", yaxis_title="ความพร้อมของระบบ (%)", margin=dict(t=20, b=20, l=10, r=10), height=320, plot_bgcolor="rgba(0,0,0,0)", yaxis=dict(gridcolor="#e0e0e0", zerolinecolor="#e0e0e0"), xaxis=dict(gridcolor="rgba(0,0,0,0)"))
+                
+                fig_line.update_layout(
+                    yaxis_range=[0, 115], 
+                    xaxis_title="", 
+                    yaxis_title="ความพร้อมของระบบ (%)", 
+                    margin=dict(t=20, b=20, l=10, r=10), 
+                    height=320, 
+                    plot_bgcolor="rgba(0,0,0,0)", 
+                    yaxis=dict(gridcolor="#e0e0e0", zerolinecolor="#e0e0e0"), 
+                    xaxis=dict(gridcolor="rgba(0,0,0,0)", tickangle=-45)
+                )
                 st.plotly_chart(fig_line, use_container_width=True)
             else:
-                st.info("ไม่มีข้อมูลประวัติสำหรับสร้างกราฟแนวโน้ม")
+                st.info("ไม่มีข้อมูลประวัติสำหรับสร้างกราฟแนวโน้มตามเงื่อนไขที่เลือก")
     else:
         st.warning("⚠️ ยังไม่มีข้อมูลในระบบ หรือเกิดข้อผิดพลาดในการเชื่อมต่อ")
 
