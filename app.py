@@ -211,7 +211,7 @@ if page == "📊 Dashboard สรุปผล":
 
         with table_col:
             with st.container(border=True):
-                st.markdown("**ผลการทดสอบตามพื้นที่ (อิงจาก Sheet 1)**")
+                st.markdown("**ผลการทดสอบตามพื้นที่**")
                 
                 # 🌟 แก้ไขตรงนี้: ให้ข้อความ HTML เขียนแบบชิดซ้ายสุดในทุกๆ แถว ป้องกัน Markdown เข้าใจผิดว่าเป็น Code Block
                 html_table = """<style>
