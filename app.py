@@ -38,7 +38,7 @@ st.markdown("""
 # ==========================================
 # 1. การตั้งค่า URL ของ Google Apps Script
 # ==========================================
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzeszDpSeSlPoLd74PhbOwNgNfise1MHDlUCmkOUIWfHDntutl-_Ewntt4Gq8OFqdI8/exec" 
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHQOIDH4ErGLo4VhSoRRXpR_bX-eM30DnAOr4d9kgRJg9Bz0v7DCHOG9cWu3acuE6L/exec" 
 
 # ==========================================
 # 2. ฟังก์ชันแปลวันที่
