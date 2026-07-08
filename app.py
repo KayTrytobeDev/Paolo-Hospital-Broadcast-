@@ -213,24 +213,22 @@ if page == "📊 Dashboard สรุปผล":
             with st.container(border=True):
                 st.markdown("**ผลการทดสอบตามพื้นที่ (อิงจาก Sheet 1)**")
                 
-                # CSS ตารางสว่างแบบในรูปภาพที่ส่งมา
+                # 🌟 แก้ไขตรงนี้: ให้ข้อความ HTML เขียนแบบชิดซ้ายสุดในทุกๆ แถว ป้องกัน Markdown เข้าใจผิดว่าเป็น Code Block
                 html_table = """<style>
-                .custom-table { width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: center; font-size: 14px; }
-                .custom-table th { padding: 10px 5px; border-bottom: 2px solid #ddd; color: #555; font-weight: bold;}
-                .custom-table td { padding: 10px 5px; border-bottom: 1px solid #eee; color: #000; }
-                .bar-bg { width: 80px; height: 10px; background-color: #e0e0e0; border-radius: 5px; display: inline-block; vertical-align: middle; margin-right: 8px; overflow: hidden;}
-                .bar-fill { height: 100%; border-radius: 5px; }
-                </style>
-                <table class="custom-table">
-                <tr><th style="text-align: left;">พื้นที่ / อาคาร (C)</th><th>ทั้งหมด</th><th>ผ่าน</th><th>ไม่ผ่าน</th><th style="text-align: left;">ความพร้อม</th></tr>"""
+.custom-table { width: 100%; border-collapse: collapse; font-family: sans-serif; text-align: center; font-size: 14px; }
+.custom-table th { padding: 10px 5px; border-bottom: 2px solid #ddd; color: #555; font-weight: bold;}
+.custom-table td { padding: 10px 5px; border-bottom: 1px solid #eee; color: #000; }
+.bar-bg { width: 80px; height: 10px; background-color: #e0e0e0; border-radius: 5px; display: inline-block; vertical-align: middle; margin-right: 8px; overflow: hidden;}
+.bar-fill { height: 100%; border-radius: 5px; }
+</style>
+<table class="custom-table">
+<tr><th style="text-align: left;">พื้นที่ / อาคาร</th><th>ทั้งหมด</th><th>ผ่าน</th><th>ไม่ผ่าน</th><th style="text-align: left;">ความพร้อม</th></tr>"""
                 
-                # ค้นหาและนับข้อมูลโดยอิงจาก "ชั้น" (คอลัมน์ C)
                 for floor in department_data.keys():
                     floor_df = filtered_df[filtered_df["คุณอยู่ชั้นไหน"] == floor] if "คุณอยู่ชั้นไหน" in filtered_df.columns else pd.DataFrame()
                     f_total = len(floor_df)
                     if f_total == 0: continue 
                         
-                    # เงื่อนไขใหม่: ผ่าน = ต้องมีคำว่า "เสียงดังฟังชัดดี"
                     f_pass = len(floor_df[floor_df[col_volume].astype(str).str.contains("เสียงดังฟังชัดดี", na=False)])
                     f_fail = f_total - f_pass
                     f_percent = (f_pass / f_total) * 100
@@ -238,9 +236,12 @@ if page == "📊 Dashboard สรุปผล":
                     bar_color = "#28a745" if f_percent == 100 else "#ffc107" if f_percent >= 90 else "#dc3545"
                     fail_color = "#dc3545" if f_fail > 0 else "inherit"
                     
+                    # 🌟 ตรงนี้เขียนต่อกันตามปกติ
                     html_table += f"""<tr><td style="text-align: left; font-weight: bold;">{floor}</td><td>{f_total}</td><td>{f_pass}</td><td style="color: {fail_color}; font-weight: bold;">{f_fail}</td><td style="text-align: left;"><div class="bar-bg"><div class="bar-fill" style="width: {f_percent}%; background-color: {bar_color};"></div></div><span>{f_percent:.1f}%</span></td></tr>"""
                 
+                # 🌟 ปรับแถวรวมชิดซ้ายสุดเช่นกัน
                 html_table += f"""<tr style="font-weight: bold; background-color: #f8f9fa;"><td style="text-align: left;">รวมทั้งหมด</td><td style="color: #17a2b8;">{total_reports}</td><td style="color: #28a745;">{pass_reports}</td><td style="color: #dc3545;">{fail_reports}</td><td style="text-align: left; color: #28a745;">{pass_percentage:.1f}%</td></tr></table>"""
+                
                 st.markdown(html_table, unsafe_allow_html=True)
                 
         st.markdown("<br>", unsafe_allow_html=True)
