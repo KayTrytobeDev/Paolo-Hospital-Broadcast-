@@ -306,7 +306,7 @@ elif page == "📝 ฟอร์มรายงาน":
         selected_dept_form = st.selectbox("2. แผนกของคุณ", department_data.get(selected_floor_form, []))
         
         selected_volume = st.radio("3. ท่านได้ยินระดับเสียงประกาศตามสายเท่าใด?", 
-            ["เสียงดังฟังชัดดี", "เสียงเบามากๆ", "ไม่ได้ยินเสียง!", "เสียงขาดๆ หายๆ เสียง ซ่าๆ", "อื่นๆ"])
+            ["เสียงดังฟังชัดดี", "เสียงเบามากๆ", "ไม่ได้ยินเสียง", "เสียงขาดๆ หายๆ เสียง ซ่าๆ", "อื่นๆ"])
         
         is_disabled = True if selected_volume != "อื่นๆ" else False
         additional_info = st.text_area("4. ข้อมูลเพิ่มเติม (เปิดให้กรอกเฉพาะกรณีเลือกตัวเลือก 'อื่นๆ')", disabled=is_disabled)
